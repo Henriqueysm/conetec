@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Histórico de Chamados | Conetec</title>
+  <link rel="stylesheet" href="../css/container.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" type="image/etec" href="../images/icon.png">
+
+  <!-- Flatpickr -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.19.3/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Biblioteca XLSX (SheetJS) para exportar Excel -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+
+</head>
+
+<body>
+
+  <div id="nav"></div>
+  <script src="../js/initNavTec.js"></script>
+
+<div class="container">
+  <div class="table-wrapper">
+    <br>
+    <h3>Histórico de Chamados</h3>
+
+<div class="container-btn">
+    <button id="exportExcel" class="export-btn"><i class="fa-solid fa-file-excel"></i> Exportar </button>
+</div>
+
+<!-- Filtros -->
+<div class="filters">
+  <select id="filterStatus">
+    <option value="">Todos os Status</option>
+    <option value="Pendente">Pendente</option>
+    <option value="Em Andamento">Em Andamento</option>
+    <option value="Resolvido">Resolvido</option>
+  </select>
+
+  <select id="filterUsuario">
+    <option value="">Todos os Usuários</option>
+  </select>
+
+  <select id="filterTecnico">
+    <option value="">Todos os Técnicos</option>
+  </select>
+
+  <select id="filterSala">
+    <option value="">Todas as Salas</option>
+  </select>
+
+  <!-- 🗓️ Filtro por período -->
+  <input id="filterPeriodo" placeholder="Selecione o período" readonly style="cursor:pointer;" />
+  <button id="clearFilters" class="delete-btn">Limpar</button>
+</div>
+
+<table id="chamadoTable">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Título</th>
+      <th>Categoria</th>
+      <th>Status</th>
+      <th>Usuário</th>
+      <th>Data Abertura</th>
+      <th>Prazo Estimado</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- preenchido pelo JS -->
+  </tbody>
+</table>
+  </div>
+</div>
+
+
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Detalhes do Chamado</h3>
+      <span id="closeModal" class="close"></span>
+    </div>
+
+    <div class="modal-body">
+      
+        <div class="campo-duplo">
+                  <div class="campo">
+          <label>Usuário</label>
+          <input type="text" readonly style="font-weight: 600;" id="usuario">
+        </div>
+
+
+           <div class="campo">
+          <label>Urgência</label>
+          <input type="text" readonly id="urgencia">
+        </div>
+
+
+        
+        <div class="campo">
+          <label>Criado em</label>
+          <input type="text" readonly id="criado">
+        </div>
+        </div>
+
+             <div class="campo-duplo">
+        <div class="campo">
+          <label>Categoria</label>
+          <input type="text" readonly id="categoria">
+        </div>
+
+
+        <div class="campo">
+          <label>Sala</label>
+          <input type="text" readonly id="sala">
+        </div>
+
+        <div class="campo">
+          <label>Computador</label>
+          <input type="text" readonly id="computador">
+        </div>
+      </div>
+
+      <div class="campo">
+        <label>Título</label>
+        <input type="text" readonly id="titulo">
+      </div>
+
+          <div class="campo">
+        <label>Descrição do Solicitante</label>
+        <textarea readonly id="descricao" style="height: 12vh;"></textarea>
+      </div>
+
+
+ <div class="campo-duplo">
+
+
+    
+
+
+        <div class="campo">
+          <label>Técnico Responsável</label>
+          <input type="text" readonly style="font-weight: 600;" id="tecnico">
+        </div>
+
+        <div class="campo">
+          <label>Status</label>
+          <input type="text" readonly id="statusSelect">
+        </div>
+
+        <div class="campo">
+          <label>Última Atualização</label>
+          <input type="text" readonly id="atualizacao">
+        </div>
+      </div>
+
+     <div class="campo">
+                <label>Prazo para Resolução</label>
+     <div type="text" readonly id="prazoContainer" style="margin-top:10px;"></div>
+</div>
+
+    <div class="campo">
+        <label>Histórico (status & observações anteriores)</label>
+<div id="historico-container" class="historico-box"></div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button id="closeModalBtn" class="btn-close">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+  (() => {
+/* ---------- Variáveis globais ---------- */
+const tbodyChamados = document.querySelector('#chamadoTable tbody');
+let chamadosOriginais = [];    // todos vindos do backend
+let chamadosFiltrados = [];    // resultado após aplicar filtros
+let fpInstance = null;         // flatpickr instance
+
+/* ---------- Popular selects (usuários e salas) ---------- */
+async function popularSelects() {
+  try {
+    // usuarios
+    const resUsuarios = await fetch('http://localhost:8000/api/usuario', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const dataUsuarios = await resUsuarios.json();
+    if (!resUsuarios.ok) {
+      console.warn('Erro ao buscar usuários:', dataUsuarios);
+    }
+    const usuarios = Array.isArray(dataUsuarios) ? dataUsuarios : (dataUsuarios.usuarios || []);
+
+    const selectUsuario = document.getElementById('filterUsuario');
+    const selectTecnico = document.getElementById('filterTecnico');
+
+    // limpa e adiciona default
+    selectUsuario.innerHTML = '<option value="">Todos os Usuários</option>';
+    selectTecnico.innerHTML = '<option value="">Todos os Técnicos</option>';
+
+    usuarios.forEach(u => {
+      // usuário (funcionario/admin)
+      if (u.tipo === 'funcionario' || u.tipo === 'admin' || !u.tipo) {
+        const opt = document.createElement('option');
+        opt.value = u.nome;
+        opt.textContent = u.nome;
+        selectUsuario.appendChild(opt);
+      }
+      // tecnico
+      if (u.tipo === 'tecnico') {
+        const opt = document.createElement('option');
+        opt.value = u.nome;
+        opt.textContent = u.nome;
+        selectTecnico.appendChild(opt);
+      }
+    });
+
+    // salas (busca simples, tenta endpoint /api/sala)
+    try {
+      const resSalas = await fetch('http://localhost:8000/api/sala', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const dataSalas = await resSalas.json();
+      const selectSala = document.getElementById('filterSala');
+      if (Array.isArray(dataSalas)) {
+        // remove default e adiciona
+        selectSala.innerHTML = '<option value="">Todas as Salas</option>';
+        dataSalas.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.nome || s.id || s;
+          opt.textContent = s.nome || s.id || s;
+          selectSala.appendChild(opt);
+        });
+      }
+    } catch (err) {
+      console.warn('Não foi possível carregar salas:', err);
+    }
+
+  } catch (err) {
+    console.error('Erro em popularSelects:', err);
+  }
+}
+
+// === Exportar dados filtrados ===
+document.getElementById("exportExcel").addEventListener("click", async () => {
+  try {
+    if (!chamadosFiltrados || chamadosFiltrados.length === 0) {
+      alert("Nenhum dado para exportar. Ajuste os filtros e tente novamente.");
+      return;
+    }
+
+    // Para cada chamado filtrado, busca o histórico
+    const todosComHistorico = [];
+    for (const ch of chamadosFiltrados) {
+      const resHist = await fetch(`http://localhost:8000/api/historico/chamado/${ch.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` } // usa o token que já existe
+      });
+      const hist = await resHist.json();
+      const historico = Array.isArray(hist) ? hist : (hist.historico || []);
+
+      const historicoTexto = historico.map(h =>
+        `${new Date(h.data_hora).toLocaleString('pt-BR')} - ${h.status || ''} (${h.tecnico_nome || h.usuario_nome || 'Sistema'}): ${h.observacao || ''}`
+      ).join("\n");
+
+      todosComHistorico.push({
+        ID: ch.id,
+        Título: ch.titulo || '',
+        Categoria: ch.categoria || '',
+        Urgência: ch.urgencia || '',
+        Status: ch.status || '',
+        Usuário: ch.usuario_nome || ch.usuario || '',
+        Técnico: ch.tecnico_responsavel_nome || ch.tecnico || '',
+        Sala: ch.sala_nome || ch.sala || '',
+        Computador: ch.numero_mesa || ch.aparelhos_nome || '',
+        Descrição: ch.descricao || '',
+        "Data Abertura": ch.data_abertura ? new Date(ch.data_abertura).toLocaleString('pt-BR') : '',
+        "Última Atualização": ch.data_atualizacao ? new Date(ch.data_atualizacao).toLocaleString('pt-BR') : '',
+        "Prazo Estimado": ch.data_limite ? new Date(ch.data_limite).toLocaleString('pt-BR') : '',
+        "Histórico Completo": historicoTexto
+      });
+    }
+
+    // Cria a planilha
+    const ws = XLSX.utils.json_to_sheet(todosComHistorico);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Chamados Filtrados");
+
+    // Exporta o arquivo
+    XLSX.writeFile(wb, "historico_chamados_filtrados.xlsx");
+
+  } catch (err) {
+    console.error("Erro ao exportar:", err);
+    alert("Erro ao exportar os dados. Veja o console para mais detalhes.");
+  }
+});
+
+
+
+/* ---------- Formatar data ---------- */
+const formatDate = data => {
+  if (!data) return '';
+  const d = new Date(data.replace(' ', 'T'));
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()} às ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+};
+
+// fallback de horas por urgência (só usado se backend não enviar horas)
+function getHorasPorUrgencia(urgencia) {
+  if (!urgencia) return 24;
+  const u = urgencia.toString().toLowerCase();
+  if (u.includes('baixa')) return 72;   // exemplo: 3 dias
+  if (u.includes('média') || u.includes('media')) return 24;
+  if (u.includes('alta')) return 4;
+  return 24;
+}
+
+// retorna Date do prazo estimado (data_abertura + horas)
+function calcularDataPrazoEstimado(chamado) {
+  if (!chamado || !chamado.data_abertura) return null;
+
+  // prioridade: se backend já retornou data_limite / prazo_estimado use-a
+  if (chamado.data_limite) return new Date(chamado.data_limite);
+  if (chamado.prazo_estimado) return new Date(chamado.prazo_estimado);
+  // ou se backend enviou horas diretamente (ex: tempo_estimado, horas_limite)
+  const horas = chamado.tempo_estimado || chamado.horas_limite || getHorasPorUrgencia(chamado.urgencia);
+  const abertura = new Date(chamado.data_abertura);
+  return new Date(abertura.getTime() + Number(horas) * 60 * 60 * 1000);
+}
+
+// formata uma duração (ms) em "Xd Yh Zmin"
+function formatDurationFromMs(ms) {
+  const totalMin = Math.abs(Math.floor(ms / (1000 * 60)));
+  const dias = Math.floor(totalMin / (60 * 24));
+  const horas = Math.floor((totalMin % (60 * 24)) / 60);
+  const minutos = totalMin % 60;
+  const parts = [];
+  if (dias > 0) parts.push(`${dias} dia${dias > 1 ? 's' : ''}`);
+  if (horas > 0) parts.push(`${horas}h`);
+  if (minutos > 0) parts.push(`${minutos}min`);
+  return parts.length ? parts.join(' ') : '0min';
+}
+
+// calcula tempo de resolução (data_abertura -> data_resolvido)
+// se dataResolvido for nula retorna null
+function calcularTempoResolucao(dataAbertura, dataResolvido) {
+  if (!dataAbertura || !dataResolvido) return null;
+  const inicio = new Date(dataAbertura);
+  const fim = new Date(dataResolvido);
+  const diffMs = fim - inicio;
+  return { diffMs, texto: formatDurationFromMs(diffMs) };
+}
+
+
+/* ---------- Cor do prazo ---------- */
+function getPrazoColor(dataLimite) {
+  const agora = new Date();
+  const limite = new Date(dataLimite);
+  const diffHoras = (limite - agora) / (1000 * 60 * 60);
+
+  if (diffHoras <= 0) return "vermelho";   // vencido
+  if (diffHoras <= 2) return "laranja";    // próximo do vencimento
+  return "verde";                          // dentro do prazo
+}
+
+/* ---------- Formatar o tempo do prazo ---------- */
+function formatarTempoRestante(dataLimite, status) {
+  if (status === "Resolvido") {
+    return `<span style="
+      color: #28a745;
+      font-weight:600;
+      padding:4px 10px;
+      border-radius:20px;
+      display:center;
+      align-items:center;
+      gap:6px;
+    ">
+     Resolvido
+    </span>`;
+  }
+
+  const agora = new Date();
+  const limite = new Date(dataLimite);
+  const diffMs = limite - agora;
+
+if (diffMs <= 0) return "<span style='color: #dc3545; font-weight:600; padding:4px 10px; border-radius:20px; display:flex; align-items:center; gap:6px;'>Prazo encerrado</span>";
+
+  const horas = Math.floor(diffMs / (1000 * 60 * 60));
+  const minutos = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  return `${horas}h ${minutos}min restantes`;
+}
+
+
+/* ---------- Buscar chamados ---------- */
+async function carregarChamados() {
+  try {
+    const res = await fetch('http://localhost:8000/api/chamado', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Erro ao buscar chamados');
+    const data = await res.json();
+    chamadosOriginais = Array.isArray(data) ? data : (data.chamados || []);
+    chamadosFiltrados = chamadosOriginais.slice();
+    aplicarFiltros(); // aplica (render + marcar)
+  } catch (err) {
+    console.error('Erro ao carregar chamados:', err);
+    tbodyChamados.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#a00;">Erro ao conectar ao backend: ${err.message}</td></tr>`;
+  }
+}
+
+/* ---------- Render tabela ---------- */
+function exibirChamados(lista) {
+  tbodyChamados.innerHTML = '';
+  if (!Array.isArray(lista) || lista.length === 0) {
+    tbodyChamados.innerHTML = `<tr><td colspan="7" style="text-align:center;">Nenhum chamado encontrado</td></tr>`;
+    return;
+  }
+
+  // Atualiza os tempos restantes a cada 30 segundos
+setInterval(() => {
+  const linhas = document.querySelectorAll('#chamadoTable tbody tr');
+  linhas.forEach(tr => {
+    const id = tr.children[0]?.textContent; // pega o ID do chamado
+    const chamado = chamadosFiltrados.find(c => c.id == id);
+    if (chamado && chamado.data_limite) {
+      const color = getPrazoColor(chamado.data_limite);
+      const tempoRestante = formatarTempoRestante(chamado.data_limite);
+      const prazoTd = tr.children[6]; // coluna "Prazo Estimado"
+      if (prazoTd) {
+        prazoTd.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="indicador-prazo ${color}"></span>
+            <span>${tempoRestante}</span>
+          </div>
+        `;
+      }
+    }
+  });
+}, 30000); // 30 segundos
+
+
+  lista.forEach(u => {
+    const tr = document.createElement('tr');
+
+let prazoHTML = '-';
+if (u.data_limite) {
+  const color = getPrazoColor(u.data_limite);
+const tempoRestante = formatarTempoRestante(u.data_limite, u.status);
+
+if (u.status === "Resolvido") {
+  prazoHTML = tempoRestante; // já vem estilizado com ✅
+} else {
+  prazoHTML = `
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="indicador-prazo ${color}"></span>
+      <span>${tempoRestante}</span>
+    </div>
+  `;
+}
+
+}
+
+
+tr.innerHTML = `
+  <td>${u.id}</td>
+  <td>${u.titulo || '-'}</td>
+  <td>${u.categoria || '-'}</td>
+  <td>${u.status || '-'}</td>
+  <td>${u.usuario_nome || u.usuario || '-'}</td>
+  <td>${u.data_abertura ? new Date(u.data_abertura).toLocaleDateString('pt-BR') : '-'}</td>
+  <td>${prazoHTML}</td>
+  <td><button class="view-details-btn">Ver Histórico</button></td>
+`;
+
+    tbodyChamados.appendChild(tr);
+
+    // colorir linha conforme status (se quiser manter estilo)
+    tr.classList.remove('status-pendente','status-andamento','status-resolvido');
+    if (u.status === 'Pendente') tr.classList.add('status-pendente');
+    if (u.status === 'Em Andamento') tr.classList.add('status-andamento');
+    if (u.status === 'Resolvido') tr.classList.add('status-resolvido');
+
+    tr.querySelector('.view-details-btn').addEventListener('click', () => abrirModal(u));
+  });
+}
+
+/* ---------- Aplicar filtros (status, usuario, tecnico, sala, periodo) ---------- */
+function aplicarFiltros() {
+  const status = document.getElementById('filterStatus').value;
+  const usuario = document.getElementById('filterUsuario').value;
+  const tecnico = document.getElementById('filterTecnico').value;
+  const sala = document.getElementById('filterSala').value;
+
+  // começa do original
+  let resultado = chamadosOriginais.filter(ch => {
+    const matchStatus = !status || (ch.status === status);
+    const matchUsuario = !usuario || (ch.usuario_nome === usuario || ch.usuario === usuario);
+    const matchTecnico = !tecnico || (ch.tecnico_responsavel_nome === tecnico || ch.tecnico === tecnico);
+    const matchSala = !sala || (ch.sala_nome === sala || ch.sala === sala);
+
+    return matchStatus && matchUsuario && matchTecnico && matchSala;
+  });
+
+  // aplica período (se houver)
+  const intervalo = fpInstance ? fpInstance.selectedDates : [];
+  if (intervalo && intervalo.length === 2) {
+    // define início 00:00 e fim 23:59:59
+    const inicio = new Date(intervalo[0]);
+    inicio.setHours(0,0,0,0);
+    const fim = new Date(intervalo[1]);
+    fim.setHours(23,59,59,999);
+
+    resultado = resultado.filter(ch => {
+      const d = new Date(ch.data_abertura);
+      return d >= inicio && d <= fim;
+    });
+  }
+
+  chamadosFiltrados = resultado;
+  exibirChamados(chamadosFiltrados);
+  marcarDiasChamados();
+}
+
+/* ---------- Marcar dias no calendário (verde se houver chamados no conjunto filtrado) ---------- */
+function marcarDiasChamados() {
+  if (!fpInstance || !fpInstance.calendarContainer) return;
+
+  // cria set de datas (ISO yyyy-mm-dd) com chamadosFiltrados
+  const diasComChamado = new Set(chamadosFiltrados
+    .map(ch => {
+      if (!ch.data_abertura) return null;
+      return (new Date(ch.data_abertura)).toISOString().split('T')[0];
+    })
+    .filter(Boolean)
+  );
+
+  // percorre os dias do flatpickr
+  const days = fpInstance.calendarContainer.querySelectorAll('.flatpickr-day');
+  days.forEach(day => {
+    const dateObj = day.dateObj;
+    if (!dateObj) return;
+    const iso = dateObj.toISOString().split('T')[0];
+    if (diasComChamado.has(iso)) {
+      day.classList.add('chamado-day-mark'); // classe para estilizar
+    } else {
+      day.classList.remove('chamado-day-mark');
+    }
+  });
+}
+
+/* ---------- Inicializar filtros e flatpickr ---------- */
+function inicializarFiltros() {
+  // listeners simples
+  ['filterStatus','filterUsuario','filterTecnico','filterSala'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('change', aplicarFiltros);
+  });
+
+  // botão limpar filtros
+  const btnClear = document.getElementById('clearFilters');
+  if (btnClear) {
+    btnClear.addEventListener('click', () => {
+      document.getElementById('filterStatus').value = '';
+      document.getElementById('filterUsuario').value = '';
+      document.getElementById('filterTecnico').value = '';
+      document.getElementById('filterSala').value = '';
+      if (fpInstance) fpInstance.clear();
+      aplicarFiltros();
+    });
+  }
+
+  // inicializa flatpickr
+  fpInstance = flatpickr("#filterPeriodo", {
+    mode: "range",
+    dateFormat: "d/m/Y",
+    onChange: function(selectedDates, dateStr, instance) {
+      // ao alterar, aplica filtros (que chama marcarDiasChamados)
+      aplicarFiltros();
+    },
+    onMonthChange: function() { marcarDiasChamados(); },
+    onYearChange: function() { marcarDiasChamados(); },
+    onReady: function() { marcarDiasChamados(); }
+  });
+}
+
+// === COR DO SELECT DE STATUS ===
+const statusSelect = document.getElementById("statusSelect");
+
+// Função que aplica a cor de acordo com o valor
+function aplicarCorStatus() {
+  const valor = statusSelect.value;
+  statusSelect.style.fontWeight = "700";
+  statusSelect.style.border = "none";
+
+  switch (valor) {
+    case "Pendente":
+      statusSelect.style.backgroundColor = "#e2c044"; // amarelo claro
+      statusSelect.style.color = "#fff";
+      break;
+    case "Em Andamento":
+      statusSelect.style.backgroundColor = "#4e91d8"; // azul
+      statusSelect.style.color = "#fff";
+      break;
+    case "Resolvido":
+      statusSelect.style.backgroundColor = "#4ab863"; // verde
+      statusSelect.style.color = "#fff";
+      break;
+    default:
+      statusSelect.style.backgroundColor = "#f0f0f0";
+      statusSelect.style.color = "#000";
+      break;
+  }
+}
+
+
+// Atualiza quando o técnico muda o status
+statusSelect.addEventListener("change", aplicarCorStatus);
+
+// === Calcular tempo de resolução (data_criado → data_resolvido) ===
+function calcularPrazoModal(dataAbertura, dataResolvido, status) {
+  if (!dataAbertura) return "Sem data de criação";
+
+  // se não estiver resolvido, mostramos o tempo restante normal
+  if (status !== "Resolvido") {
+    const limite = new Date(dataResolvido || dataAbertura);
+    const agora = new Date();
+    const diffMs = limite - agora;
+    if (diffMs <= 0) return `<span style="color:#d9534f;font-weight:600;">⚠️ Prazo encerrado</span>`;
+    
+    const totalMin = Math.floor(diffMs / (1000 * 60));
+    const dias = Math.floor(totalMin / (60 * 24));
+    const horas = Math.floor((totalMin % (60 * 24)) / 60);
+    const minutos = totalMin % 60;
+    const partes = [];
+    if (dias > 0) partes.push(`${dias} dia${dias>1?"s":""}`);
+    if (horas > 0) partes.push(`${horas}h`);
+    if (minutos > 0) partes.push(`${minutos}min`);
+    return `<span style="color:#212529;font-weight:600;">${partes.join(" ")} restantes</span>`;
+  }
+
+  // caso resolvido — calcula quanto tempo levou entre criação e resolução
+  if (!dataResolvido) return `<span style="color:#28a745;font-weight:600;">✅ Resolvido</span>`;
+  
+  const inicio = new Date(dataAbertura);
+  const fim = new Date(dataResolvido);
+  const diffMs = fim - inicio;
+
+  const totalMin = Math.floor(diffMs / (1000 * 60));
+  const dias = Math.floor(totalMin / (60 * 24));
+  const horas = Math.floor((totalMin % (60 * 24)) / 60);
+  const minutos = totalMin % 60;
+
+  const partes = [];
+  if (dias > 0) partes.push(`${dias} dia${dias>1?"s":""}`);
+  if (horas > 0) partes.push(`${horas}h`);
+  if (minutos > 0) partes.push(`${minutos}min`);
+  const tempoFormatado = partes.length ? partes.join(" ") : "0min";
+
+  return `<span style="color:#28a745;font-weight:600;">✅ Resolvido em ${tempoFormatado}</span>`;
+}
+
+
+
+
+/* ---------- Funções do Modal ---------- */
+async function abrirModal(chamado) {
+  // Preenche campos
+  document.getElementById('usuario').value = chamado.usuario_nome || '';
+  document.getElementById('urgencia').value = chamado.urgencia || '';
+  aplicarCorUrgencia(document.getElementById('urgencia'), chamado.urgencia);
+  document.getElementById('criado').value = formatDate(chamado.data_abertura);
+  document.getElementById('categoria').value = chamado.categoria || '';
+  document.getElementById('sala').value = chamado.sala_nome || '';
+  document.getElementById('computador').value = chamado.numero_mesa || chamado.aparelhos_nome || '';
+  document.getElementById('titulo').value = chamado.titulo || '';
+  document.getElementById('descricao').value = chamado.descricao || '';
+  document.getElementById('tecnico').value = chamado.tecnico_responsavel_nome || 'Sem técnico';
+    const statusInput = document.getElementById('statusSelect');
+    statusInput.value = chamado.status || '';
+    aplicarCorStatus(); // chama a função que pinta o fundo
+  document.getElementById('atualizacao').value = chamado.data_atualizacao ? formatDate(chamado.data_atualizacao) : '';
+
+   // === PRAZO ESTIMADO DENTRO DO MODAL ===
+  // buscar histórico e obter a data de resolução, se existir
+  const historico = await carregarHistorico(chamado.id);
+
+  // encontra a entrada de histórico que registra resolução (procura primeira ocorrência)
+  const resolveEntry = historico.find(h => {
+    const s = (h.status || h.status_novo || "").toString().toLowerCase();
+    return s === "resolvido" || s.includes("resol");
+  });
+
+  let dataResolvido = null;
+  if (resolveEntry && resolveEntry.data_hora) {
+    dataResolvido = resolveEntry.data_hora;
+  } else if (chamado.data_resolvido) {
+    dataResolvido = chamado.data_resolvido;
+  } else if (chamado.status === "Resolvido" && chamado.data_atualizacao) {
+    dataResolvido = chamado.data_atualizacao; // fallback
+  }
+
+  const prazoContainer = document.getElementById("prazoContainer");
+  const prazoDate = calcularDataPrazoEstimado(chamado); // data_criacao + sla
+
+  if (!prazoDate) {
+    prazoContainer.innerHTML = `<p>Sem prazo definido</p>`;
+  } else {
+    // tempo até o prazo a partir de agora (para chamados abertos)
+    const agora = new Date();
+    const diffPrazoAgora = prazoDate - agora;
+
+    // se resolvido -> mostrar tempo que levou para resolver (data_resolvido - data_criacao)
+    if (chamado.status === "Resolvido") {
+      const tempoResolucao = calcularTempoResolucao(chamado.data_abertura, dataResolvido);
+      if (tempoResolucao) {
+        // dentro ou fora do prazo? comparar data_resolvido com prazoDate
+        const dentroPrazo = new Date(dataResolvido) <= prazoDate;
+        prazoContainer.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:#f9f9f9;">
+            <span class="indicador-prazo ${getPrazoColor(prazoDate)}"></span>
+            <div>
+              <div><strong>Prazo estimado:</strong> ${prazoDate.toLocaleString('pt-BR')}</div>
+              <div><strong>Tempo de resolução:</strong> ${dentroPrazo
+                ? `<span style="color:#28a745;font-weight:600;">✅ Resolvido em ${tempoResolucao.texto} (dentro do prazo)</span>`
+                : `<span style="color:#d9534f;font-weight:600;">✅ Resolvido em ${tempoResolucao.texto} (após o prazo)</span>`}
+              </div>
+            </div>
+          </div>
+        `;
+      } else {
+        prazoContainer.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:#f9f9f9;">
+            <span class="indicador-prazo ${getPrazoColor(prazoDate)}"></span>
+            <div>
+              <div><strong>Prazo estimado:</strong> ${prazoDate.toLocaleString('pt-BR')}</div>
+              <div><strong>Tempo de resolução:</strong> <span style="color:#28a745;font-weight:600;">✅ Resolvido</span></div>
+            </div>
+          </div>
+        `;
+      }
+    } else {
+      // não resolvido: mostra tempo restante até o prazo (agora -> prazoDate)
+      if (diffPrazoAgora <= 0) {
+        prazoContainer.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:#f9f9f9;">
+            <span class="indicador-prazo vermelho"></span>
+            <div>
+              <div><strong>Prazo estimado:</strong> ${prazoDate.toLocaleString('pt-BR')}</div>
+              <div><strong>Tempo restante:</strong> <span style="color:#d9534f;font-weight:600;">⚠️ Prazo encerrado</span></div>
+            </div>
+          </div>
+        `;
+      } else {
+        const tempoTexto = formatDurationFromMs(diffPrazoAgora);
+        prazoContainer.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:#f9f9f9;">
+            <span class="indicador-prazo ${getPrazoColor(prazoDate)}"></span>
+            <div>
+              <div><strong>Prazo estimado:</strong> ${prazoDate.toLocaleString('pt-BR')}</div>
+              <div><strong>Tempo restante:</strong> <span style="color:#212529;font-weight:600;">${tempoTexto} restantes</span></div>
+            </div>
+          </div>
+        `;
+      }
+    }
+  }
+
+
+
+  await carregarHistorico(chamado.id);
+
+  // Exibe modal
+  document.getElementById('modal').style.display = 'flex';
+}
+
+/* ---------- Fechar Modal ---------- */
+function fecharModal() {
+  document.getElementById('modal').style.display = 'none';
+}
+
+/* ---------- Cores urgência ---------- */
+function aplicarCorUrgencia(inputEl, urgencia) {
+  const u = (urgencia || '').toLowerCase();
+  inputEl.style.fontWeight = '700';
+  if (u === 'baixa') {
+    inputEl.style.color = '#0aaa2f';
+    inputEl.style.background = '#e8f8ec';
+  } else if (u === 'média' || u === 'media') {
+    inputEl.style.color = '#e48901';
+    inputEl.style.background = '#fff6e8';
+  } else if (u === 'alta') {
+    inputEl.style.color = '#cc0116';
+    inputEl.style.background = '#fff0f0';
+  } else {
+    inputEl.style.color = '#000';
+    inputEl.style.background = 'transparent';
+  }
+}
+
+/* ---------- Histórico dentro do modal ---------- */
+async function carregarHistorico(chamadoId) {
+  const container = document.getElementById("historico-container");
+  container.innerHTML = "<p>Carregando...</p>";
+  try {
+    const res = await fetch(`http://localhost:8000/api/historico/chamado/${chamadoId}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    });
+
+    if (!res.ok) throw new Error("Erro ao buscar histórico");
+
+    const data = await res.json();
+    const historico = Array.isArray(data) ? data : (data.historico || []);
+
+    if (!historico.length) {
+      container.innerHTML = "<p>Nenhum histórico disponível.</p>";
+      return historico; // retorna array vazio
+    }
+
+    const getStatusStyle = (status) => {
+      switch (status) {
+        case "Pendente": return "background:#e2c044;color:#fff;";
+        case "Em Andamento": return "background:#4e91d8;color:#fff;";
+        case "Resolvido": return "background:#4ab863;color:#fff;";
+        default: return "background:#f0f0f0;color:#000;";
+      }
+    };
+
+    container.innerHTML = historico.map((h, index) => `
+      <div class="historico-item">
+        <div class="historico-top">
+          <strong>${h.tecnico_nome || h.usuario_nome || 'Sistema'}</strong>
+          <span class="historico-status" style="padding:2px 10px;border-radius:999px;font-weight:700;font-size:12px;${getStatusStyle(h.status)}">
+            ${h.status || ''}
+          </span>
+        </div>
+        <small class="historico-data">${new Date(h.data_hora).toLocaleString('pt-BR')}</small>
+        <p class="historico-text">${h.observacao ? h.observacao.replace(/\n/g,'<br>') : ''}</p>
+      </div>
+      ${index < historico.length - 1 ? '<hr class="historico-divider">' : ''}
+    `).join('');
+
+    return historico; // <-- retorna o array
+  } catch (err) {
+    console.error("Erro ao carregar histórico:", err);
+    container.innerHTML = "<p>Erro ao carregar histórico.</p>";
+    return []; // em erro, retorna array vazio
+  }
+}
+
+
+
+/* ---------- Eventos do Modal ---------- */
+document.getElementById('closeModal').onclick = fecharModal;
+document.getElementById('closeModalBtn').onclick = fecharModal;
+window.onclick = (e) => { if (e.target === document.getElementById('modal')) fecharModal(); };
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharModal(); });
+
+
+/* ---------- Inicialização (sequência correta) ---------- */
+window.addEventListener('DOMContentLoaded', async () => {
+  inicializarFiltros();
+  await popularSelects();
+  await carregarChamados();
+});
+
+/* ---------- Estilos para marcar dias (adicione no CSS global) ---------- */
+/* Você pode mover isto para seu arquivo CSS existente */
+const style = document.createElement('style');
+style.innerHTML = `
+.flatpickr-day.chamado-day-mark {
+  background: #4caf50 !important;
+  color: #fff !important;
+  border-radius: 6px;
+}
+`;
+document.head.appendChild(style);
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,451 @@
+ :root {
+   --red: #B20000;
+   --dark-red: #B20000;
+   --teal: #005C6D;
+   --muted: #777;
+   --card-bg: #ffffff;
+   --page-bg: #efefef;
+   --shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+   font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif;
+ }
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-image: url(../images/background.jpg);
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+.container {
+  display: flex;
+  width: 90vw;
+  max-width: 900px;
+  height: 60vh; /* ocupa 60% da altura da tela */
+  background: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
+  overflow: hidden;
+  margin: auto;
+}
+
+.panel {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 40px;
+}
+
+.signup p{
+  font-weight: 600;
+  color: #c30000;
+}
+
+.left-panel {
+  width: 50%;
+  height: 100%;
+  background: url('../images/fundo (2).png') center center / 280% no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Força o painel a respeitar a altura do container */
+.container > .panel {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Remove interferência de padding interno na altura */
+.panel.left-panel img {
+  max-width: 80%;
+  height: auto;
+}
+
+.right-panel {
+  background: #a00;
+  color: white;
+}
+.form-container {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+  max-width: 300px;
+}
+.form-container.active {
+  display: flex;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 0px;
+    max-width: 350px;
+    padding: 0px;
+    position: relative;
+    color: #fafafa;
+  
+  }
+  
+  button {
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 10px;
+}
+button:hover {
+  background: #ffffffe8;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -1px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: 30px;
+  color: #ffffff;
+}
+
+.title::before {
+  width: 18px;
+  height: 18px;
+}
+
+.title::after {
+  width: 18px;
+  height: 18px;
+  animation: pulse 1s linear infinite;
+}
+
+.title::before,
+.title::after {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  border-radius: 50%;
+  left: 0px;
+  background-color: #ffffff;
+}
+  
+
+  .message, 
+  .signin {
+    font-size: 14.5px;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  .btn-entrar {
+    text-align: center;
+  }
+
+  
+  .btn-entrar a {
+    color: #00bfff;
+
+  }
+
+  .btn-criar {
+    text-align: center;
+  }
+  
+  .btn-criar a:hover {
+    text-decoration: underline royalblue;
+  }
+  
+  .btn-criar a {
+    color: #00bfff;
+    font-weight: 600;
+  }
+  
+  .flex {
+    display: flex;
+    width: 100%;
+    gap: 6px;
+  }
+
+  .password-label {
+    position: relative;
+    width: 100%;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+
+.toggle-password img {
+    width: 20px;
+    height: 20px;
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.toggle-password:hover img {
+    opacity: 1;
+}
+
+  
+  .form label {
+    position: relative;
+  }
+  
+  .form label .input {
+    background-color: #4f4f4f;
+    color: #fff;
+    width: 100%;
+    padding: 15px 05px 05px 0px;
+    outline: 0;
+    border: 1px solid rgba(105, 105, 105, 0.397);
+    border-radius: 10px;
+    padding-left: 15px;
+    
+  }
+  
+  .form label .input + span {
+    color: #dadada;
+    position: absolute;
+    left: 15px;
+    top: 10px;
+    font-size: 0.5em;
+    cursor: text;
+    transition: 0.3s ease;
+  }
+  
+  .form label .input:placeholder-shown + span {
+    top: 17.5px;
+    font-size: 0.9em;
+  }
+  
+  .form label .input:focus + span,
+  .form label .input:valid + span {
+    color: #ff4141;
+    top: 10px;
+    font-size: 0.5em;
+    font-weight: 600;
+  }
+  
+  .input {
+    font-size: medium;
+  }
+  
+  .btn-avancar{
+    border: none;
+    outline: none;
+    padding: 10px;
+    border-radius: 10px;
+    color: #ad0101;
+    font-size: 16px;
+    transform: .3s ease;
+    background-color: #ffffff;
+  }
+  
+  .submit:hover {
+    background-color: #00bfff96;
+  }
+  
+/* Fundo escurecido quando o pop-up aparece */
+.popup-container {
+  display: none; /* use display: block para mostrar */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+}
+
+/* Caixa central */
+.popup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* centraliza exato */
+  background: #fff;
+  padding: 25px 30px;
+  border-radius: 10px;
+  text-align: center;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+  color: #000;
+  animation: popupFade 0.3s ease;
+}
+
+
+/* Botão fechar */
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #444;
+}
+
+.close-btn:hover {
+  color: #a00;
+}
+
+/* Inputs */
+.popup input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* Botões */
+.popup button {
+  background: #a00;
+  color: white;
+  border: none;
+  padding: 10px;
+  width: 100%;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: background 0.3s ease;
+}
+
+.popup button:hover {
+  background: #800;
+}
+
+/* Texto auxiliar */
+.popup p {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+/* Container das caixas de código */
+#codeInputs {
+  display: flex;
+  justify-content: center;
+  gap: 10px; /* espaçamento entre as caixas */
+  margin: 20px 0;
+}
+
+/* Cada caixa individual */
+.code-digit {
+  width: 40px;
+  height: 50px;
+  font-size: 24px;
+  text-align: center;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+/* Foco na caixa ativa */
+.code-digit:focus {
+  border-color: var(--dark-red);
+  box-shadow: 0 0 5px var(--dark-red);
+}
+
+/* Apenas números */
+.code-digit::-webkit-outer-spin-button,
+.code-digit::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.code-digit[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Responsivo: caixas menores em telas pequenas */
+@media (max-width: 500px) {
+  .code-digit {
+    width: 35px;
+    height: 45px;
+    font-size: 20px;
+  }
+}
+
+/* Botão de verificar código */
+#verifyCodeBtn {
+  display: block;
+  margin: 0 auto;
+  padding: 10px 25px;
+  font-size: 16px;
+  background-color: var(--dark-red);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+#verifyCodeBtn:hover {
+  background-color: #ff4141;
+}
+
+/* Mensagem de informação */
+#step-code .info {
+  text-align: center;
+  font-size: 14px;
+  color: #555;
+  margin-top: 10px;
+}
+
+/* Link "Esqueci minha senha" */
+.forgot-password {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.forgot-password a {
+  color: #00bfff;
+  text-decoration: none;
+}
+
+.forgot-password a:hover {
+  text-decoration: underline;
+}
+
+
+
+  @keyframes pulse {
+    from {
+      transform: scale(0.9);
+      opacity: 1;
+    }
+  
+    to {
+      transform: scale(1.8);
+      opacity: 0;
+    }
+  }

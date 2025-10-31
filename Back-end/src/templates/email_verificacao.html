@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Código de Verificação</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .header {
+      background-color: #B20000;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+    .content {
+      padding: 30px;
+      text-align: center;
+      color: #333;
+    }
+    .code-box {
+      background: #e0e7ff;
+      display: inline-block;
+      padding: 15px 30px;
+      border-radius: 8px;
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 4px;
+      color:  #B20000;
+      margin: 20px 0;
+    }
+    .footer {
+      background: #f3f4f6;
+      text-align: center;
+      padding: 15px;
+      font-size: 13px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Conetec</h1>
+    </div>
+    <div class="content">
+      <h2>Verificação de Segurança</h2>
+      <p>Olá, use o código abaixo para redefinir sua senha. Ele é válido por alguns minutos.</p>
+      <div class="code-box">{{codigo}}</div>
+      <p>Se você não solicitou essa verificação, ignore este e-mail.</p>
+    </div>
+    <div class="footer">
+      © 2025 Conetec - Todos os direitos reservados
+    </div>
+  </div>
+</body>
+</html>

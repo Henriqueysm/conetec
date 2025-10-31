@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestão de Computadores - Admin | Conetec</title>
+  <link rel="stylesheet" href="../css/container.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" type="image/etec" href="../images/icon.png">
+</head>
+
+<body>
+
+  <div id="nav"></div>
+  <script src="../js/initNavAd.js"></script>
+
+  <div class="container">
+    <div class="form-wrapper">
+      <p class="title">Inclusão de Computadores</p>
+      <br>
+     <form id="formCadastro">
+  <input type="number" id="numero_mesa" placeholder="Número da Mesa" required />
+  <input type="text" id="modelo" placeholder="Modelo" required />
+  <input type="text" id="patrimonio_monitor" placeholder="Patrimônio Monitor" required />
+  <input type="text" id="patrimonio_cpu" placeholder="Patrimônio CPU" required />
+  <input type="text" id="numero_serie" placeholder="Número de Série" required />
+
+  <select id="status_pc" required>
+    <option value="">Selecione o status</option>
+    <option value="Funcionando">Funcionando</option>
+    <option value="Em manutenção">Em manutenção</option>
+    <option value="Quebrado">Quebrado</option>
+  </select>
+
+  <select id="Sala" required>
+    <option value="">Selecione a sala</option>
+  </select>
+
+  <button type="submit">Cadastrar</button>
+</form>
+
+    </div>
+
+    <!-- TABELA -->
+    <div class="table-wrapper">
+      <h3>Computadores Cadastrados</h3>
+
+      <!-- 🔎 FILTROS -->
+      <div class="filter-wrapper filters">
+        <div>
+          <select id="filtroSala">
+            <option value="">Todas as Salas</option>
+          </select>
+          <input type="text" id="filtroMesa" placeholder="Filtrar por número da mesa..."
+            style="padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+          <button id="btnLimparFiltro"
+            style="padding: 8px 14px; border: none; border-radius: 6px; background-color: #777; color: white; cursor: pointer;">Limpar</button>
+        </div>
+      </div>
+
+      <table id="computadorTable">
+        <thead>
+          <tr>
+            <th>Número Mesa</th>
+            <th>Modelo</th>
+            <th>Patrimônio Monitor</th>
+            <th>Patrimônio CPU</th>
+            <th>Número de Série</th>
+            <th>Status</th>
+            <th>Sala</th>
+            <th>Atualizado em</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- preenchido pelo JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const formCadastro = document.getElementById("formCadastro");
+    const computadorTable = document.querySelector('#computadorTable tbody');
+    const filtroSala = document.getElementById("filtroSala");
+    const filtroMesa = document.getElementById("filtroMesa");
+    const btnLimpar = document.getElementById("btnLimparFiltro");
+
+    let todosComputadores = [];
+    let mapaSalas = {};
+
+    // =======================
+    // CARREGAR SALAS
+    // =======================
+    async function carregarSalas() {
+      try {
+        const response = await fetch("http://localhost:8000/api/sala", {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) throw new Error(`Erro: ${response.status}`);
+
+        const salas = await response.json();
+        mapaSalas = {};
+        salas.forEach(s => mapaSalas[s.id] = s.nome);
+
+        // preencher select de cadastro
+        const selectSala = document.getElementById("Sala");
+        selectSala.innerHTML = '<option value="">Selecione a sala</option>';
+        salas.forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s.id;
+          opt.textContent = s.nome;
+          selectSala.appendChild(opt);
+        });
+
+        // preencher select de filtro
+        filtroSala.innerHTML = '<option value="">Todas as Salas</option>';
+        salas.forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s.id;
+          opt.textContent = s.nome;
+          filtroSala.appendChild(opt);
+        });
+
+      } catch (err) {
+        console.error("Erro ao carregar salas:", err);
+      }
+    }
+
+    // =======================
+    // CADASTRAR COMPUTADOR
+    // =======================
+    formCadastro.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const data = {
+  numero_mesa: document.getElementById("numero_mesa").value,
+  modelo: document.getElementById("modelo").value,
+  patrimonio_monitor: document.getElementById("patrimonio_monitor").value,
+  patrimonio_cpu: document.getElementById("patrimonio_cpu").value,
+  numero_serie: document.getElementById("numero_serie").value,
+  sala_id: document.getElementById("Sala").value,
+  status: document.getElementById("status_pc").value
+};
+
+
+      try {
+        const res = await fetch("http://localhost:8000/api/computador", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) throw new Error("Erro ao cadastrar computador");
+
+        alert("Computador cadastrado com sucesso!");
+        formCadastro.reset();
+        getAllComputador();
+
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao cadastrar computador.");
+      }
+    });
+
+    // =======================
+    // BUSCAR COMPUTADORES
+    // =======================
+    async function getAllComputador() {
+      try {
+        const res = await fetch("http://localhost:8000/api/computador", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (!res.ok) throw new Error("Erro ao buscar computadores");
+
+        todosComputadores = await res.json();
+        aplicarFiltros();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // =======================
+    // RENDERIZAR TABELA
+    // =======================
+    function renderTabela(lista) {
+      computadorTable.innerHTML = "";
+      lista.forEach(pc => {
+        const atualizadoData = new Date(pc.atualizado_em);
+        const dataFmt = atualizadoData.toLocaleString("pt-BR");
+
+        const tr = document.createElement("tr");
+       tr.innerHTML = `
+  <td><input value="${pc.numero_mesa}" data-id="${pc.id}" class="edit-numero-mesa"></td>
+  <td><input value="${pc.modelo}" data-id="${pc.id}" class="edit-modelo"></td>
+  <td><input value="${pc.patrimonio_monitor}" data-id="${pc.id}" class="edit-monitor"></td>
+  <td><input value="${pc.patrimonio_cpu}" data-id="${pc.id}" class="edit-cpu"></td>
+  <td><input value="${pc.numero_serie}" data-id="${pc.id}" class="edit-serie"></td>
+  <td>
+    <select class="edit-status" data-id="${pc.id}">
+      <option value="Funcionando" ${pc.status === "Funcionando" ? "selected" : ""}>Funcionando</option>
+      <option value="Em manutenção" ${pc.status === "Em manutenção" ? "selected" : ""}>Em manutenção</option>
+      <option value="Quebrado" ${pc.status === "Quebrado" ? "selected" : ""}>Quebrado</option>
+    </select>
+  </td>
+  <td>
+    <select class="edit-sala" data-id="${pc.id}">
+      ${Object.entries(mapaSalas)
+        .map(([id, nome]) => `<option value="${id}" ${id == pc.sala_id ? "selected" : ""}>${nome}</option>`)
+        .join("")}
+    </select>
+  </td>
+  <td><input value="${dataFmt}" readonly></td>
+  <td>
+    <div class="two-btn">
+      <button class="edit-btn" onclick="updateComputador(${pc.id})">
+        <i class="fa-solid fa-pen"></i>
+      </button>
+      <button class="delete-btn" onclick="deleteComputador(${pc.id})">
+        <i class="fa-solid fa-trash"></i>
+      </button>
+    </div>
+  </td>
+`;
+
+computadorTable.appendChild(tr);
+      });
+    }
+
+    // =======================
+    // FILTROS
+    // =======================
+    function aplicarFiltros() {
+      const salaSelecionada = filtroSala.value;
+      const termoMesa = filtroMesa.value.trim().toLowerCase();
+
+      const filtrados = todosComputadores.filter(pc => {
+        const condSala = !salaSelecionada || pc.sala_id == salaSelecionada;
+        const condMesa = !termoMesa || String(pc.numero_mesa).toLowerCase().includes(termoMesa);
+        return condSala && condMesa;
+      });
+
+      renderTabela(filtrados);
+    }
+
+    filtroSala.addEventListener("change", aplicarFiltros);
+    filtroMesa.addEventListener("input", aplicarFiltros);
+    btnLimpar.addEventListener("click", () => {
+      filtroSala.value = "";
+      filtroMesa.value = "";
+      aplicarFiltros();
+    });
+
+    // =======================
+    // ATUALIZAR E EXCLUIR
+    // =======================
+    async function updateComputador(id) {
+      const token = localStorage.getItem("token");
+      const numero_mesa = document.querySelector(`.edit-numero-mesa[data-id='${id}']`).value;
+      const modelo = document.querySelector(`.edit-modelo[data-id='${id}']`).value;
+      const patrimonio_monitor = document.querySelector(`.edit-monitor[data-id='${id}']`).value;
+      const patrimonio_cpu = document.querySelector(`.edit-cpu[data-id='${id}']`).value;
+      const numero_serie = document.querySelector(`.edit-serie[data-id='${id}']`).value;
+      const sala_id = document.querySelector(`.edit-sala[data-id='${id}']`).value;
+      const status = document.querySelector(`.edit-status[data-id='${id}']`).value;
+
+          const payload = { numero_mesa, modelo, patrimonio_monitor, patrimonio_cpu, numero_serie, sala_id, status };
+
+          
+      try {
+        const res = await fetch(`http://localhost:8000/api/computador/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            numero_mesa,
+            modelo,
+            patrimonio_monitor,
+            patrimonio_cpu,
+            numero_serie,
+            sala_id,
+            status
+          })
+        });
+
+        if (!res.ok) throw new Error("Erro ao atualizar computador");
+
+        alert("Computador atualizado com sucesso!");
+        getAllComputador();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function deleteComputador(id) {
+      try {
+        const res = await fetch(`http://localhost:8000/api/computador/${id}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Erro ao excluir computador");
+
+        alert("Computador excluído com sucesso!");
+        getAllComputador();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // =======================
+    // INICIAR
+    // =======================
+    carregarSalas().then(() => getAllComputador());
+  </script>
+</body>
+</html>

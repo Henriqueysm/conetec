@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestão de Salas - Admin | Conetec</title>
+  <link rel="stylesheet" href="../css/container.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" type="image/etec" href="../images/icon.png">
+  <script src="../js/logout.js" defer></script>
+</head>
+
+<body>
+
+  <div id="nav"></div>
+  <script src="../js/initNavAd.js"></script>
+
+  <div class="container">
+    <div class="form-wrapper">
+      <p class=title>Inclusão de salas </p>
+      <br>
+      <form id="formCadastro">
+        <input type="text" id="nome" placeholder="Nome da sala" required />
+        <input type="text" id="descricao" placeholder="Descrição da sala" required />
+
+        <button type="submit">Cadastrar</button>
+      </form>
+    </div>
+
+    <!-- TABELA -->
+    <div class="table-wrapper">
+      <h3>Salas Cadastradas</h3>
+      <table id="salaTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Sala</th>
+            <th>Descrição</th>
+            <th>Criado em</th>
+            <th>Atualizado em</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- preenchido pelo JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+  // chama quando abre a página
+    getAllSala();
+
+    // submit do cadastro
+    formCadastro.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = null;
+      const nome = document.getElementById('nome').value;
+      const descricao = document.getElementById('descricao').value;
+
+      try {
+        await fetch('http://localhost:8000/api/sala', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem("token")}`
+          },
+          body: JSON.stringify({ id, nome, descricao })
+        });
+        alert('Sala cadastrada com sucesso!');
+        formCadastro.reset();
+        getAllSala(); // aqui estava getAllSalas
+      } catch (err) {
+        console.error('Erro ao cadastrar:', err);
+        alert('Erro ao cadastrar sala.');
+      }
+    });
+
+
+    const salaTable = document.querySelector('#salaTable tbody');
+
+    async function getAllSala() {
+      const token = localStorage.getItem("token");
+
+      try {
+        const response = await fetch("http://localhost:8000/api/sala", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          console.error("Erro ao buscar salas:", response.status);
+          return;
+        }
+
+        const sala = await response.json();
+
+        salaTable.innerHTML = '';
+
+        sala.forEach(u => {
+          const criadoData = new Date(u.criado_em);
+          const atualizadoData = new Date(u.atualizado_em);
+
+          const formatDate = (data) => {
+            const dia = String(data.getDate()).padStart(2, '0');
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const ano = data.getFullYear();
+            const hora = String(data.getHours()).padStart(2, '0');
+            const minuto = String(data.getMinutes()).padStart(2, '0');
+            return `${dia}/${mes}/${ano} às ${hora}:${minuto}`;
+          };
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+        <td>${u.id}</td>
+        <td><input value="${u.nome}" data-id="${u.id}" class="edit-nome"></td>
+        <td><input value="${u.descricao}" data-id="${u.id}" class="edit-descricao"></td>
+        <td><input value="${formatDate(criadoData)}" readonly></td>
+        <td><input value="${formatDate(atualizadoData)}" readonly></td>
+            <td>
+  <div class="two-btn">
+    <button class="edit-btn" onclick="updateSala(${u.id})">
+      <i class="fa-solid fa-pen"></i>
+    </button>
+    <button class="delete-btn" onclick="deleteSala(${u.id})">
+      <i class="fa-solid fa-trash"></i>
+    </button>
+  </div>
+</td>
+      `;
+          salaTable.appendChild(tr);
+        });
+
+      } catch (err) {
+        console.error("Erro ao carregar salas:", err);
+      }
+    }
+
+    async function updateSala(id) {
+      const token = localStorage.getItem("token");
+      const nome = document.querySelector(`.edit-nome[data-id='${id}']`).value;
+      const descricao = document.querySelector(`.edit-descricao[data-id='${id}']`).value;
+
+      try {
+        const response = await fetch(`http://localhost:8000/api/sala/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ nome, descricao })
+        });
+
+        if (!response.ok) {
+          console.error("Erro ao atualizar sala");
+          return;
+        }
+
+        alert("Sala atualizada com sucesso!");
+        getAllSala(); // corrigido
+      } catch (err) {
+        console.error("Erro ao atualizar:", err);
+      }
+    }
+
+
+    async function deleteSala(id) {
+      const token = localStorage.getItem("token");
+
+      try {
+        const response = await fetch(`http://localhost:8000/api/sala/${id}`, {
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          console.error("Erro ao excluir sala");
+          return;
+        }
+
+        alert("Sala excluída com sucesso!");
+        getAllSala();
+      } catch (err) {
+        console.error("Erro ao excluir:", err);
+      }
+    }
+
+    // Chama quando abre a página
+    getAllSala();
+
+  </script>
+
+</body>
+
+</html>

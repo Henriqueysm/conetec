@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mapeamento de Salas | Conetec</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" type="image/etec" href="../images/icon.png">
+  <script src="script.js" defer></script>
+
+  <style>
+    .container {
+      background-color: #f9f9f9;
+      border-radius: 15px;
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 20px;
+      font-family: 'Segoe UI', Arial, sans-serif;
+    }
+  
+    .container h3,
+    .container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #363636;
+    }
+  
+    .salas, .equipamentos { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* largura menor */
+      gap: 22px; /* menos espaço entre os cards */
+    }
+  
+    .sala-card,
+    .equipamento-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+  
+    .sala-card:hover,
+    .equipamento-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.15);
+    }
+  
+    .sala-card h4,
+    .equipamento-card h4 {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #111;
+    }
+  
+    .sala-card p,
+    .equipamento-card p {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 6px;
+    }
+  
+    .btn {
+      display: inline-block;
+      padding: 8px 12px;
+      background: #2563eb;
+      color: #fff;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.3s;
+    }
+  
+    .btn:hover {
+      background: #1d4ed8;
+    }
+  
+    .equipamentos {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+    }
+
+    #computadores-container .equipamento-card {
+  max-width: 220px;
+  padding: 15px;
+  font-size: 13px;
+  margin-bottom: 30px;
+}
+
+#aparelhos-container .equipamento-card {
+  max-width: 220px;
+  padding: 15px;
+  font-size: 13px;
+}
+
+#computadores-container,
+#aparelhos-container {
+  display: flex;
+  flex-wrap: wrap;      /* permite quebrar linha */
+  gap: 12px;            /* distância entre cards */
+  justify-content: flex-start; /* alinha à esquerda */
+}
+
+ h4{
+margin-bottom: 20px;
+text-align: center;
+}
+  </style>
+</head>
+
+<body>
+  <div id="nav"></div>
+  <script src="../js/initNavFun.js"></script>
+
+<div class="container">
+  <h2>Salas</h2>
+  <div class="salas" id="salas-container"></div>
+
+  <div id="detalhes-sala" style="margin-top:40px;">
+    <!-- Detalhes de computadores e aparelhos serão gerados aqui -->
+  </div>
+</div>
+
+<script>
+const salasContainer = document.getElementById("salas-container");
+const detalhesContainer = document.getElementById("detalhes-sala");
+
+// 1️⃣ Carregar todas as salas
+async function carregarSalas() {
+  try {
+    const response = await fetch("http://localhost:8000/api/sala/com-equipamentos");
+    const salas = await response.json();
+
+    salasContainer.innerHTML = "";
+    salas.forEach(sala => {
+      const card = document.createElement("div");
+      card.classList.add("sala-card");
+      card.innerHTML = `
+        <h4>${sala.nome}</h4>
+        <p>${sala.descricao || "Sem descrição"}</p>
+        <p><strong>Computadores:</strong> ${sala.quantidade_computadores}</p>
+        <p><strong>Outros aparelhos:</strong> ${sala.quantidade_outros_aparelhos}</p>
+      <a href="#" class="btn" onclick="verDetalhes(${sala.id})">Ver Detalhes</a>
+      `;
+      salasContainer.appendChild(card);
+    });
+  } catch (err) {
+    console.error("Erro ao carregar salas:", err);
+    salasContainer.innerHTML = "<p>Erro ao carregar salas.</p>";
+  }
+}
+
+// 2️⃣ Carregar detalhes de uma sala específica
+async function verDetalhes(salaId) {
+  try {
+    const response = await fetch(`http://localhost:8000/api/sala/${salaId}/detalhes`);
+    const sala = await response.json();
+    console.log(sala);
+
+    detalhesContainer.innerHTML = `
+      <h3>Detalhes da Sala: ${sala.nome} - ${sala.descricao || "N/A"}</h3>
+
+      <h4>Computadores (${(sala.computadores || []).length})</h4>
+      <div class="equipamentos" id="computadores-container"></div>
+
+      <h4>Outros Aparelhos (${(sala.outros_aparelhos || []).length})</h4>
+      <div class="equipamentos" id="aparelhos-container"></div>
+    `;
+
+    const computadoresContainer = document.getElementById("computadores-container");
+    (sala.computadores || []).forEach(pc => {
+      const card = document.createElement("div");
+      card.classList.add("equipamento-card");
+      card.innerHTML = `
+        <p><b>Terminal:</b> ${pc.numero_mesa || "N/A"}</p>
+        <p><b>Modelo:</b> ${pc.modelo || "N/A"}</p>
+        <p><b>Patrimônio CPU:</b> ${pc.patrimonio_cpu || "N/A"}</p>
+        <p><b>Patrimônio Monitor:</b> ${pc.patrimonio_monitor || "N/A"}</p>
+      `;
+      computadoresContainer.appendChild(card);
+    });
+
+    const aparelhosContainer = document.getElementById("aparelhos-container");
+    (sala.outros_aparelhos || []).forEach(aparelho => {
+      const card = document.createElement("div");
+      card.classList.add("equipamento-card");
+      card.innerHTML = `
+        <h4>${aparelho.tipo || "N/A"}</h4>
+        <p><b>Modelo:</b> ${aparelho.modelo || "N/A"}</p>
+        <p><b>Patrimônio:</b> ${aparelho.patrimonio || "N/A"}</p>
+      `;
+      aparelhosContainer.appendChild(card);
+    });
+
+    if (!(sala.outros_aparelhos || []).length) {
+      aparelhosContainer.innerHTML = "<p>Nenhum outro aparelho cadastrado.</p>";
+    }
+
+  } catch (err) {
+    console.error("Erro ao carregar detalhes da sala:", err);
+    detalhesContainer.innerHTML = "<p>Erro ao carregar detalhes da sala.</p>";
+  }
+}
+
+
+// Inicializa
+carregarSalas();
+</script>
+
+</body>
+</html>

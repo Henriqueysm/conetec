@@ -1,0 +1,48 @@
+# ======================================
+# 🧠 CONFIGURAÇÃO PADRÃO NODE.JS
+# ======================================
+
+# Dependências
+node_modules/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Ambiente
+Back-end/.env
+.env
+.env.local
+.env.*.local
+
+# Sistema Operacional / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Build / Output
+dist/
+build/
+coverage/
+.cache/
+.tmp/
+
+# Arquivos temporários
+*.tmp
+*.bak
+*.old
+
+# Arquivos de configuração locais
+package-lock.json
+yarn.lock
+
+# ======================================
+# 💻 FRONTEND ESTÁTICO (HTML, CSS, JS)
+# ======================================
+
+# Arquivos gerados por IDEs ou navegadore

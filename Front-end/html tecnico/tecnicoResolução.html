@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Resolução de Chamados 2 | Conetec</title>
+  <link rel="stylesheet" href="../css/container.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" href="../images/icon.png">
+</head>
+
+<style>
+  .view-details-btn{
+    background-color: rgb(0, 153, 255);
+  }
+</style>
+
+<body>
+    <div id="nav"></div>
+  <script src="../js/initNavTec.js"></script>
+
+<div class="container">
+  <div class="table-wrapper">
+    <br>
+    <h3>Resolvendo Chamados</h3>
+
+     <!-- Filtros -->
+      <div class="filters">
+        <select id="filterStatus">
+          <option value="">Todos os status</option>
+          <option value="Pendente">Pendente</option>
+          <option value="Em Andamento">Em Andamento</option>
+          <option value="Resolvido">Resolvido</option>
+        </select>
+
+        <select id="filterUrgencia">
+          <option value="">Todas as urgências</option>
+          <option value="Baixa">Baixa</option>
+          <option value="Média">Média</option>
+          <option value="Alta">Alta</option>
+        </select>
+
+        <input type="date" id="filterData">
+        <button id="clearFilters" class="delete-btn">Limpar</button>
+      </div>
+
+      <table id="chamadoTable">
+        <thead>
+          <tr>
+            <th>Criado em</th>
+            <th>Categoria</th>
+            <th>Sala</th>
+            <th>Urgência</th>
+            <th>Status</th>
+            <th>Usuário</th>
+            <th>Técnico</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODAL DE DETALHES DO CHAMADO -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Detalhes do Chamado</h3>
+        <span id="closeModal" class="close">&times;</span>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="idChamado">
+
+        <div class="campo-duplo">
+          <div class="campo">
+            <label>Usuário</label>
+            <input type="text" readonly id="usuario_nome" style="font-weight:600;">
+          </div>
+
+          <div class="campo">
+            <label>Urgência</label>
+            <input type="text" readonly id="urgencia">
+          </div>
+
+          <div class="campo">
+            <label>Aberto em</label>
+            <input type="text" readonly id="criado">
+          </div>
+        </div>
+
+        <div class="campo-duplo">
+          <div class="campo">
+            <label>Categoria</label>
+            <input type="text" readonly id="categoria">
+          </div>
+          <div class="campo">
+            <label>Sala</label>
+            <input type="text" readonly id="sala">
+          </div>
+          <div class="campo">
+            <label>Computador / Aparelho</label>
+            <input type="text" readonly id="computador_aparelho">
+          </div>
+        </div>
+
+        <div class="campo">
+          <label>Título</label>
+          <textarea readonly id="titulo"></textarea>
+        </div>
+
+        <div class="campo">
+          <label>Descrição do Solicitante</label>
+          <textarea readonly id="descricao" style="height:12vh;"></textarea>
+        </div>
+
+        <div class="campo-duplo">
+          <div class="campo">
+            <label>Técnico Responsável</label>
+            <input type="text" readonly id="tecnico_modal" style="font-weight:600;">
+          </div>
+
+          <div class="campo">
+            <label>Status</label>
+            <select id="statusSelect">
+              <option value="Pendente">Pendente</option>
+              <option value="Em Andamento">Em Andamento</option>
+              <option value="Resolvido">Resolvido</option>
+            </select>
+          </div>
+
+          <div class="campo">
+            <label>Última Atualização</label>
+            <input type="text" readonly id="atualizacao">
+          </div>
+        </div>
+
+        <div class="campo">
+          <label>Observação do Técnico</label>
+          <textarea id="observacao_tecnico_modal" placeholder="Digite aqui o que foi feito..." style="height:8vh;" required></textarea>
+        </div>
+
+        <!-- Adicionado o container de prazo -->
+        <div class="campo">
+          <label>Prazo Estimado / Resolução</label>
+          <div id="prazoContainer" class="historico-box"></div>
+        </div>
+
+        <div class="campo">
+          <label>Histórico (status & observações anteriores)</label>
+          <div id="historico-container" class="historico-box"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+        <button id="saveBtn" class="edit-btn" style="padding:8px 14px;">Salvar Alterações</button>
+        <button id="closeModalBtn" class="btn-close" style="padding:8px 14px;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chamadoTable = document.querySelector('#chamadoTable tbody');
+    let chamadoData = [];
+
+    // --- Formatar datas ---
+    const formatDate = data => {
+      if (!data) return '';
+      const d = new Date(data.replace(' ', 'T'));
+      return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()} às ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    };
+
+    // --- Colorir linha conforme status ---
+    function colorirLinha(tr, status) {
+      tr.classList.remove('status-pendente', 'status-andamento', 'status-resolvido');
+      if (status === 'Pendente') tr.classList.add('status-pendente');
+      else if (status === 'Em Andamento') tr.classList.add('status-andamento');
+      else if (status === 'Resolvido') tr.classList.add('status-resolvido');
+    }
+
+    // --- Cor do select de status ---
+    const statusSelect = document.getElementById("statusSelect");
+    function aplicarCorStatus() {
+      const valor = statusSelect.value;
+      switch (valor) {
+        case "Pendente":
+          statusSelect.style.backgroundColor = "#bda24b";
+          break;
+        case "Em Andamento":
+          statusSelect.style.backgroundColor = "#4e91d8";
+          break;
+        case "Resolvido":
+          statusSelect.style.backgroundColor = "#4ab863";
+          break;
+        default:
+          statusSelect.style.backgroundColor = "";
+      }
+      statusSelect.style.color = "white";
+    }
+    statusSelect.addEventListener("change", aplicarCorStatus);
+
+    // --- Buscar chamados ---
+    async function getAllChamado() {
+      try {
+        const res = await fetch('http://localhost:8000/api/chamado', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const chamados = await res.json();
+        chamadoData = chamados;
+        renderTabela(chamadoData);
+      } catch (err) {
+        console.error('Erro ao carregar chamados:', err);
+      }
+    }
+
+    // --- Renderizar tabela ---
+    function renderTabela(data) {
+      chamadoTable.innerHTML = '';
+      if (!data.length) {
+        chamadoTable.innerHTML = `<tr><td colspan="8" style="text-align:center;">Nenhum chamado encontrado</td></tr>`;
+        return;
+      }
+
+      data.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${formatDate(u.data_abertura)}</td>
+          <td>${u.categoria}</td>
+          <td>${u.sala_nome || ''}</td>
+          <td class="${u.urgencia === 'Baixa' ? 'urgencia-baixa' : u.urgencia === 'Média' ? 'urgencia-media' : u.urgencia === 'Alta' ? 'urgencia-alta' : ''}">${u.urgencia || ''}</td>
+          <td>${u.status || ''}</td>
+          <td>${u.usuario_nome || ''}</td>
+          <td>${u.tecnico_responsavel_nome || 'Sem técnico'}</td>
+          <td><button class="view-details-btn">Ver chamado</button></td>
+        `;
+        chamadoTable.appendChild(tr);
+        colorirLinha(tr, u.status);
+        tr.querySelector('.view-details-btn').addEventListener('click', () => abrirModal(u));
+      });
+    }
+
+/* ---------- Cores urgência ---------- */
+function aplicarCorUrgencia(inputEl, urgencia) {
+  const u = (urgencia || '').toLowerCase();
+  inputEl.style.fontWeight = '700';
+  if (u === 'baixa') {
+    inputEl.style.color = '#0aaa2f';
+    inputEl.style.background = '#e8f8ec';
+  } else if (u === 'média' || u === 'media') {
+    inputEl.style.color = '#e48901';
+    inputEl.style.background = '#fff6e8';
+  } else if (u === 'alta') {
+    inputEl.style.color = '#cc0116';
+    inputEl.style.background = '#fff0f0';
+  } else {
+    inputEl.style.color = '#000';
+    inputEl.style.background = 'transparent';
+  }
+}
+
+    // --- Carregar histórico ---
+    async function carregarHistorico(chamadoId) {
+      const container = document.getElementById("historico-container");
+      container.innerHTML = "<p>Carregando...</p>";
+
+      try {
+        const res = await fetch(`http://localhost:8000/api/historico/chamado/${chamadoId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        const historico = Array.isArray(data) ? data : [];
+
+        if (!historico.length) {
+          container.innerHTML = "<p>Nenhum histórico disponível.</p>";
+          return historico;
+        }
+
+        const getStatusStyle = status => {
+          switch (status) {
+            case "Pendente": return "background:#e2c044;color:#fff;";
+            case "Em Andamento": return "background:#4e91d8;color:#fff;";
+            case "Resolvido": return "background:#4ab863;color:#fff;";
+            default: return "background:#f0f0f0;color:#000;";
+          }
+        };
+
+        container.innerHTML = historico.map((h, i) => `
+          <div class="historico-item">
+            <div class="historico-top">
+              <strong>${h.tecnico_nome || h.usuario_nome || 'Sistema'}</strong>
+              <span class="historico-status" style="padding:2px 10px;border-radius:999px;font-weight:700;font-size:12px;${getStatusStyle(h.status)}">${h.status || ''}</span>
+            </div>
+            <small class="historico-data">${new Date(h.data_hora).toLocaleString('pt-BR')}</small>
+            <p class="historico-text">${h.observacao ? h.observacao.replace(/\n/g, '<br>') : ''}</p>
+          </div>
+          ${i < historico.length - 1 ? '<hr class="historico-divider">' : ''}
+        `).join('');
+        return historico;
+      } catch (err) {
+        console.error("Erro ao carregar histórico:", err);
+        container.innerHTML = "<p>Erro ao carregar histórico.</p>";
+        return [];
+      }
+    }
+
+function calcularDataPrazoEstimado(chamado) {
+  if (!chamado?.data_abertura) return null;
+  const base = new Date(chamado.data_abertura.replace(' ', 'T'));
+  const horas = chamado.urgencia === 'Alta' ? 8 : chamado.urgencia === 'Média' ? 24 : 48;
+  base.setHours(base.getHours() + horas);
+  return base;
+}
+
+function calcularTempoResolucao(dataAbertura, dataResolvido) {
+  if (!dataAbertura || !dataResolvido) return null;
+  const ini = new Date(dataAbertura.replace(' ', 'T'));
+  const fim = new Date(dataResolvido.replace(' ', 'T'));
+  const diff = fim - ini;
+  const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const horas = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const minutos = Math.floor((diff / (1000 * 60)) % 60);
+  return { texto: `${dias}d ${horas}h ${minutos}min` };
+}
+
+function getPrazoColor(prazoDate) {
+  const diff = prazoDate - new Date();
+  if (diff < 0) return "vermelho";
+  if (diff < 1000 * 60 * 60 * 6) return "amarelo";
+  return "verde";
+}
+
+function formatDurationFromMs(ms) {
+  const dias = Math.floor(ms / (1000 * 60 * 60 * 24));
+  const horas = Math.floor((ms / (1000 * 60 * 60)) % 24);
+  const minutos = Math.floor((ms / (1000 * 60)) % 60);
+  return `${dias}d ${horas}h ${minutos}min`;
+}
+
+
+
+// --- Abrir modal ---
+async function abrirModal(chamado) {
+  document.getElementById('idChamado').value = chamado.id || '';
+  document.getElementById('usuario_nome').value = chamado.usuario_nome || '—';
+  document.getElementById('urgencia').value = chamado.urgencia || '—';
+  aplicarCorUrgencia(document.getElementById('urgencia'), chamado.urgencia);
+  document.getElementById('criado').value = formatDate(chamado.data_abertura);
+  document.getElementById('categoria').value = chamado.categoria || '—';
+  document.getElementById('sala').value = chamado.sala_nome || '—';
+  document.getElementById('computador_aparelho').value =
+    chamado.numero_mesa
+      ? `Mesa ${chamado.numero_mesa} - ${chamado.modelo || ''}`
+      : (chamado.aparelhos_nome || '—');
+  document.getElementById('titulo').value = chamado.titulo || '';
+  document.getElementById('descricao').value = chamado.descricao || '';
+  document.getElementById('tecnico_modal').value = chamado.tecnico_responsavel_nome || 'Sem técnico';
+  document.getElementById('statusSelect').value = chamado.status || 'Pendente';
+  document.getElementById('atualizacao').value = chamado.data_atualizacao ? formatDate(chamado.data_atualizacao) : '—';
+  document.getElementById('observacao_tecnico_modal').value = chamado.observacao_tecnico || '';
+
+  // --- PRAZO ESTIMADO DENTRO DO MODAL ---
+  const historico = await carregarHistorico(chamado.id);
+
+  const resolveEntry = historico.find(h => {
+    const s = (h.status || h.status_novo || "").toLowerCase();
+    return s.includes("resol");
+  });
+
+  let dataResolvido = resolveEntry?.data_hora || chamado.data_resolvido || (chamado.status === "Resolvido" ? chamado.data_atualizacao : null);
+
+  const prazoContainer = document.getElementById("prazoContainer");
+  const prazoDate = calcularDataPrazoEstimado(chamado);
+
+  if (!prazoDate) {
+    prazoContainer.innerHTML = `<p>Sem prazo definido</p>`;
+  } else {
+    const agora = new Date();
+    const diffPrazoAgora = prazoDate - agora;
+
+    if (chamado.status === "Resolvido") {
+      const tempoResolucao = calcularTempoResolucao(chamado.data_abertura, dataResolvido);
+      const dentroPrazo = new Date(dataResolvido) <= prazoDate;
+      prazoContainer.innerHTML = `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:#f9f9f9;">
+          <span class="indicador-prazo ${getPrazoColor(prazoDate)}"></span>
+          <div>
+            <div><strong>Prazo estimado:</strong> ${prazoDate.toLocaleString('pt-BR')}</div>
+            <div><strong>Tempo de resolução:</strong> 
+              <span style="color:${dentroPrazo ? '#28a745' : '#d9534f'};font-weight:600;">
+                ✅ Resolvido em ${tempoResolucao.texto} (${dentroPrazo ? 'dentro' : 'após'} do prazo)
+              </span>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      if (diffPrazoAgora <= 0) {
+        prazoContainer.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:#f9f9f9;">
+            <span class="indicador-prazo vermelho"></span>
+            <div>
+              <div><strong>Prazo estimado:</strong> ${prazoDate.toLocaleString('pt-BR')}</div>
+              <div><strong>Tempo restante:</strong> <span style="color:#d9534f;font-weight:600;">⚠️ Prazo encerrado</span></div>
+            </div>
+          </div>
+        `;
+      } else {
+        const tempoTexto = formatDurationFromMs(diffPrazoAgora);
+        prazoContainer.innerHTML = `
+          <div style="display:flex;align-items:center;gap:10px;padding:10px;border-radius:8px;background:#f9f9f9;">
+            <span class="indicador-prazo ${getPrazoColor(prazoDate)}"></span>
+            <div>
+              <div><strong>Prazo estimado:</strong> ${prazoDate.toLocaleString('pt-BR')}</div>
+              <div><strong>Tempo restante:</strong> <span style="color:#212529;font-weight:600;">${tempoTexto} restantes</span></div>
+            </div>
+          </div>
+        `;
+      }
+    }
+  }
+
+  document.getElementById('modal').style.display = 'flex';
+  aplicarCorStatus();
+}
+
+
+    // --- Salvar alterações ---
+    async function salvarAlteracoes() {
+      const id = document.getElementById('idChamado').value;
+      const status = document.getElementById('statusSelect').value;
+      const observacao_tecnico = document.getElementById('observacao_tecnico_modal').value;
+      const tecnico_responsavel_id = localStorage.getItem('usuario_id');
+
+      if (!id) return alert('ID do chamado ausente.');
+
+      try {
+        const res = await fetch(`http://localhost:8000/api/chamado/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ status, observacao_tecnico, tecnico_responsavel_id })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Erro ao atualizar chamado');
+        document.getElementById('modal').style.display = 'none';
+        await getAllChamado();
+        alert('Chamado atualizado com sucesso!');
+      } catch (err) {
+        console.error(err);
+        alert('Erro ao salvar: ' + err.message);
+      }
+    }
+    document.getElementById('saveBtn').addEventListener('click', salvarAlteracoes);
+
+    // --- Filtros ---
+    function aplicarFiltros() {
+      const statusFiltro = document.getElementById('filterStatus').value;
+      const urgenciaFiltro = document.getElementById('filterUrgencia').value;
+      const dataFiltro = document.getElementById('filterData').value;
+
+      const filtrados = chamadoData.filter(u => {
+        const dataChamado = u.data_abertura ? new Date(u.data_abertura).toISOString().split('T')[0] : '';
+        return (!statusFiltro || u.status === statusFiltro) &&
+               (!urgenciaFiltro || u.urgencia === urgenciaFiltro) &&
+               (!dataFiltro || dataChamado === dataFiltro);
+      });
+      renderTabela(filtrados);
+    }
+
+    document.getElementById('filterStatus').addEventListener('change', aplicarFiltros);
+    document.getElementById('filterUrgencia').addEventListener('change', aplicarFiltros);
+    document.getElementById('filterData').addEventListener('change', aplicarFiltros);
+
+    document.getElementById('clearFilters').addEventListener('click', () => {
+      document.getElementById('filterStatus').value = '';
+      document.getElementById('filterUrgencia').value = '';
+      document.getElementById('filterData').value = '';
+      renderTabela(chamadoData);
+    });
+
+    // --- Fechar modal ---
+    function fecharModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
+    document.getElementById('closeModal').onclick = fecharModal;
+    document.getElementById('closeModalBtn').onclick = fecharModal;
+    window.onclick = e => { if (e.target === document.getElementById('modal')) fecharModal(); };
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModal(); });
+
+    // --- Inicialização ---
+    getAllChamado();
+  </script>
+</body>
+</html>

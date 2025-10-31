@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestão de Aparelhos - Admin | Conetec</title>
+  <link rel="stylesheet" href="../css/container.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" type="image/etec" href="../images/icon.png">
+</head>
+
+<body>
+
+  <div id="nav"></div>
+  <script src="../js/initNavAd.js"></script>
+
+  <div class="container">
+    <div class="form-wrapper">
+      <p class="title">Inclusão de Aparelhos</p>
+      <br>
+      <form id="formAparelho">
+        <select id="tipo" required>
+          <option value="">Selecione o tipo</option>
+          <option value="Televisão">Televisão</option>
+          <option value="Ar-condicionado">Ar-condicionado</option>
+          <option value="Impressora">Impressora</option>
+          <option value="Outro">Outro</option>
+        </select>
+        <input type="text" id="modelo_ap" placeholder="Modelo" required />
+        <input type="text" id="patrimonio_ap" placeholder="Patrimônio" required />
+        <select id="status_ap" required>
+          <option value="Funcionando">Funcionando</option>
+          <option value="Em manutenção">Em manutenção</option>
+          <option value="Quebrado">Quebrado</option>
+        </select>
+        <select id="SalaAparelho" required>
+          <option value="">Selecione a sala</option>
+        </select>
+        <button type="submit">Cadastrar</button>
+      </form>
+    </div>
+
+    <!-- ===================== -->
+    <!-- TABELA DE APARELHOS -->
+    <!-- ===================== -->
+    <div class="table-wrapper">
+      <h3>Aparelhos Cadastrados</h3>
+
+      <div class="filter-wrapper filters">
+        <div>
+          <select id="filtroSalaAparelho">
+            <option value="">Todas as Salas</option>
+          </select>
+          <select id="filtroTipo">
+            <option value="">Todos os Tipos</option>
+            <option value="Televisão">Televisão</option>
+            <option value="Ar-condicionado">Ar-condicionado</option>
+            <option value="Impressora">Impressora</option>
+            <option value="Outro">Outro</option>
+          </select>
+          <button id="btnLimparAparelho"
+            style="padding: 8px 14px; border: none; border-radius: 6px; background-color: #777; color: white; cursor: pointer;">Limpar</button>
+        </div>
+      </div>
+
+      <table id="aparelhosTable">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Modelo</th>
+            <th>Patrimônio</th>
+            <th>Status</th>
+            <th>Sala</th>
+            <th>Atualizado em</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const formAparelho = document.getElementById("formAparelho");
+    const aparelhosTable = document.querySelector("#aparelhosTable tbody");
+    const filtroSalaAparelho = document.getElementById("filtroSalaAparelho");
+    const filtroTipo = document.getElementById("filtroTipo");
+    const btnLimparAparelho = document.getElementById("btnLimparAparelho");
+
+    let todosAparelhos = [];
+    let mapaSalas = {};
+
+    // =======================
+    // CARREGAR SALAS
+    // =======================
+    async function carregarSalas() {
+      try {
+        const response = await fetch("http://localhost:8000/api/sala", {
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        const salas = await response.json();
+        mapaSalas = {};
+        salas.forEach(s => mapaSalas[s.id] = s.nome);
+
+        const selectSala = document.getElementById("SalaAparelho");
+        selectSala.innerHTML = '<option value="">Selecione a sala</option>';
+        salas.forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s.id;
+          opt.textContent = s.nome;
+          selectSala.appendChild(opt);
+        });
+
+        filtroSalaAparelho.innerHTML = '<option value="">Todas as Salas</option>';
+        salas.forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s.id;
+          opt.textContent = s.nome;
+          filtroSalaAparelho.appendChild(opt);
+        });
+      } catch (err) {
+        console.error("Erro ao carregar salas:", err);
+      }
+    }
+
+    // =======================
+    // CADASTRAR APARELHO
+    // =======================
+    formAparelho.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const data = {
+        tipo: document.getElementById("tipo").value,
+        modelo: document.getElementById("modelo_ap").value,
+        patrimonio: document.getElementById("patrimonio_ap").value,
+        status: document.getElementById("status_ap").value,
+        sala_id: document.getElementById("SalaAparelho").value
+      };
+
+      try {
+        const res = await fetch("http://localhost:8000/api/aparelhos", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (!res.ok) throw new Error("Erro ao cadastrar aparelho");
+
+        alert("Aparelho cadastrado com sucesso!");
+        formAparelho.reset();
+        getAllAparelhos();
+
+      } catch (err) {
+        console.error(err);
+        alert("Erro ao cadastrar aparelho.");
+      }
+    });
+
+    // =======================
+    // BUSCAR TODOS
+    // =======================
+async function getAllAparelhos() {
+  try {
+    const res = await fetch("http://localhost:8000/api/aparelhos", {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    todosAparelhos = await res.json();
+
+    // Ordena do mais recente para o mais antigo
+    todosAparelhos.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+    aplicarFiltrosAparelho();
+  } catch (err) {
+    console.error("Erro ao buscar aparelhos:", err);
+  }
+}
+
+
+    // =======================
+    // RENDERIZAR TABELA
+    // =======================
+    function renderTabelaAparelho(lista) {
+      aparelhosTable.innerHTML = "";
+      lista.forEach(ap => {
+        const atualizadoData = new Date(ap.updated_at);
+        const dataFmt = atualizadoData.toLocaleString("pt-BR");
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><input value="${ap.tipo}" data-id="${ap.id}" class="edit-tipo"></td>
+          <td><input value="${ap.modelo}" data-id="${ap.id}" class="edit-modelo-ap"></td>
+          <td><input value="${ap.patrimonio}" data-id="${ap.id}" class="edit-patrimonio"></td>
+          <td>
+            <select class="edit-status" data-id="${ap.id}">
+              <option value="Funcionando" ${ap.status === "Funcionando" ? "selected" : ""}>Funcionando</option>
+              <option value="Em manutenção" ${ap.status === "Em manutenção" ? "selected" : ""}>Em manutenção</option>
+              <option value="Quebrado" ${ap.status === "Quebrado" ? "selected" : ""}>Quebrado</option>
+            </select>
+          </td>
+          <td>
+            <select class="edit-sala" data-id="${ap.id}">
+              ${Object.entries(mapaSalas)
+                .map(([id, nome]) => `<option value="${id}" ${id == ap.sala_id ? "selected" : ""}>${nome}</option>`)
+                .join("")}
+            </select>
+          </td>
+          <td><input value="${dataFmt}" readonly></td>
+          <td>
+            <div class="two-btn">
+              <button class="edit-btn" onclick="updateAparelhos(${ap.id})">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button class="delete-btn" onclick="deleteAparelhos(${ap.id})">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        aparelhosTable.appendChild(tr);
+      });
+    }
+
+    // =======================
+    // FILTROS
+    // =======================
+    function aplicarFiltrosAparelho() {
+      const salaSel = filtroSalaAparelho.value;
+      const tipoSel = filtroTipo.value;
+
+      const filtrados = todosAparelhos.filter(ap => {
+        const condSala = !salaSel || ap.sala_id == salaSel;
+        const condTipo = !tipoSel || ap.tipo === tipoSel;
+        return condSala && condTipo;
+      });
+
+      renderTabelaAparelho(filtrados);
+    }
+
+    filtroSalaAparelho.addEventListener("change", aplicarFiltrosAparelho);
+    filtroTipo.addEventListener("change", aplicarFiltrosAparelho);
+    btnLimparAparelho.addEventListener("click", () => {
+      filtroSalaAparelho.value = "";
+      filtroTipo.value = "";
+      aplicarFiltrosAparelho();
+    });
+
+    // =======================
+    // ATUALIZAR / EXCLUIR
+    // =======================
+    async function updateAparelhos(id) {
+      const tipo = document.querySelector(`.edit-tipo[data-id='${id}']`).value;
+      const modelo = document.querySelector(`.edit-modelo-ap[data-id='${id}']`).value;
+      const patrimonio = document.querySelector(`.edit-patrimonio[data-id='${id}']`).value;
+      const status = document.querySelector(`.edit-status[data-id='${id}']`).value;
+      const sala_id = document.querySelector(`.edit-sala[data-id='${id}']`).value;
+
+      try {
+        const res = await fetch(`http://localhost:8000/api/aparelhos/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ tipo, modelo, patrimonio, status, sala_id })
+        });
+
+        if (!res.ok) throw new Error("Erro ao atualizar aparelho");
+
+        alert("Aparelho atualizado com sucesso!");
+        getAllAparelhos();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function deleteAparelhos(id) {
+      try {
+        const res = await fetch(`http://localhost:8000/api/aparelhos/${id}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        if (!res.ok) throw new Error("Erro ao excluir aparelho");
+
+        alert("Aparelho excluído com sucesso!");
+        getAllAparelhos();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // =======================
+    // INICIAR
+    // =======================
+    carregarSalas().then(() => getAllAparelhos());
+  </script>
+</body>
+</html>

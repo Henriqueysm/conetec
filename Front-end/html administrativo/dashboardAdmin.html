@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard | Conetec</title>
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" type="image/etec" href="../images/icon.png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+
+  <div id="nav"></div>
+  <script src="../js/initNavAd.js"></script>
+
+  <main class="wrap">
+  <section class="panel">
+  <h2>Dashboard - Admin  </h2>
+
+
+  <div class="grid">
+    <!-- Cards de Resumo -->
+      <div class="card"><h3>Pendentes</h3><div class="value" id="count-pendentes">0</div></div>
+      <div class="card"><h3>Em andamento</h3><div class="value" id="count-andamento">0</div></div>
+      <div class="card"><h3>Resolvidos</h3><div class="value" id="count-resolvidos">0</div></div>
+      <div class="card"><h3>Tempo Médio Geral (horas)</h3><div class="value" id="tempo-medio-geral">0</div></div>
+  </div>
+
+  <!-- Gráficos -->
+  <div class="grid2">
+    <div class="card2 chart-card">
+      <h3>Tempo Médio por Técnico</h3>
+      <canvas id="graficoTempoMedio"  height="200"></canvas>
+    </div>
+
+    <div class="card2 chart-card">
+      <h3>Chamados por Técnico</h3>
+      <canvas id="graficoChamadosPorTecnico" height="200"></canvas>
+    </div>
+ 
+    <div class="card2 chart-card">
+      <h3>Chamados por Sala</h3>
+      <canvas id="graficoChamadosPorSala" height="200"></canvas>
+    </div>
+    
+    <div class="card2 chart-card">
+      <h3>Chamados por Turno</h3>
+      <canvas id="graficoChamadosPorTurno" height="200"></canvas>
+    </div>
+
+    <div class="card2 chart-card">
+      <h3>Chamados por Dia</h3>
+      <canvas id="graficoChamadosPorDia" height="200"></canvas>
+    </div>
+ 
+    <div class="card2 chart-card">
+      <h3>Resolvidos por Dia</h3>
+      <canvas id="graficoResolvidosPorDia" height="200"></canvas>
+    </div>
+    
+ </div>
+
+
+
+  <h3>Últimos chamados</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Título</th>
+        <th>Usuário</th>
+        <th>Categoria</th>
+        <th>Status</th>
+        <th>Data</th>
+        <th>Ações</th>
+
+      </tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
+</section>
+</main>
+
+<script>
+    // ---------------------------------------
+
+async function fetchJson(url) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '[sem corpo]');
+    throw new Error(`HTTP ${res.status} ${res.statusText} - ${txt}`);
+  }
+  return res.json();
+}
+
+async function carregarDashboard() {
+  try {
+
+    const data = await fetchJson("http://localhost:8000/api/dashboard/");
+
+    // Segurança: defaults
+    const cards = data.cards || { pendentes: 0, andamento: 0, resolvidos: 0 };
+    const tempoMedio = data.tempoMedio ?? 0;
+    const ultimos = Array.isArray(data.ultimos) ? data.ultimos : [];
+
+    // === Cards ===
+    document.getElementById("count-pendentes").innerText = cards.pendentes ?? 0;
+    document.getElementById("count-andamento").innerText = cards.andamento ?? 0;
+    document.getElementById("count-resolvidos").innerText = cards.resolvidos ?? 0;
+    document.getElementById("tempo-medio-geral").innerText = String(tempoMedio);
+
+    // === Últimos chamados (tabela) ===
+    const tbody = document.getElementById("table-body");
+    tbody.innerHTML = "";
+
+    const chamadosAtivos = ultimos.filter(chamado =>
+      chamado && (chamado.status === "Pendente" || chamado.status === "Em Andamento")
+    );
+
+    if (chamadosAtivos.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Nenhum chamado pendente ou em andamento</td></tr>`;
+    } else {
+      chamadosAtivos.forEach(chamado => {
+        // proteções contra undefined
+        const id = chamado.id ?? '—';
+        const titulo = chamado.titulo ?? '—';
+        const usuario = chamado.usuario ?? '—';
+        const categoria = chamado.categoria ?? '—';
+        const status = chamado.status ?? '—';
+        const dataAb = chamado.data_abertura ? new Date(chamado.data_abertura).toLocaleDateString("pt-BR") : '—';
+
+        tbody.innerHTML += `
+          <tr>
+            <td>${id}</td>
+            <td>${titulo}</td>
+            <td>${usuario}</td>
+            <td>${categoria}</td>
+            <td class="${
+              status === "Pendente" ? "status-pendente" :
+              status === "Em Andamento" ? "status-andamento" :
+              status === "Resolvido" ? "status-resolvido" : ""
+            }">${status}</td>
+            <td>${dataAb}</td>
+          </tr>
+        `;
+      });
+    }
+  } catch (err) {
+    console.error("Erro ao carregar dashboard (cards/ultimos):", err);
+    const tbody = document.getElementById("table-body");
+    if (tbody) tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#a00;">Erro ao carregar dados</td></tr>`;
+  }
+}
+
+async function carregarGraficos() {
+  try {
+    // --- Chamados por Sala ---
+    let salas = [];
+    try { salas = await fetchJson("http://localhost:8000/api/dashboard/porSala"); }
+    catch(e){ console.warn("porSala:", e.message); salas = []; }
+
+    new Chart(document.getElementById("graficoChamadosPorSala"), {
+      type: "bar",
+      data: {
+        labels: (salas || []).map(s => s.sala ?? '—'),
+        datasets: [{
+          label: "Chamados",
+          data: (salas || []).map(s => s.total ?? 0),
+          backgroundColor: "#3498db"
+        }]
+      },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    // --- Chamados por Técnico ---
+    let tecnicos = [];
+    try { tecnicos = await fetchJson("http://localhost:8000/api/dashboard/chamadosPorTecnico"); }
+    catch(e){ console.warn("chamadosPorTecnico:", e.message); tecnicos = []; }
+
+    new Chart(document.getElementById("graficoChamadosPorTecnico"), {
+      type: "pie",
+      data: {
+        labels: (tecnicos || []).map(t => t.tecnico ?? '—'),
+        datasets: [{
+          label: "Chamados",
+          data: (tecnicos || []).map(t => t.total ?? 0),
+          backgroundColor: ["#e67e22", "#3498db", "#27ae60", "#9b59b6", "#f1c40f"]
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    // --- Tempo Médio por Técnico ---
+    let tempoMedio = [];
+    try { tempoMedio = await fetchJson("http://localhost:8000/api/dashboard/tempoMedioPorTecnico"); }
+    catch(e){ console.warn("tempoMedioTecnico:", e.message); tempoMedio = []; }
+
+    new Chart(document.getElementById("graficoTempoMedio"), {
+      type: "bar",
+      data: {
+        labels: (tempoMedio || []).map(t => t.tecnico ?? '—'),
+        datasets: [{
+          label: "Tempo Médio (min)",
+            data: (tempoMedio || []).map(t => t.tempo_medio_horas ?? 0),
+          backgroundColor: "#2ecc71"
+        }]
+      },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    // --- Chamados por Dia ---
+    let dias = [];
+    try { dias = await fetchJson("http://localhost:8000/api/dashboard/porDia"); }
+    catch(e){ console.warn("porDia:", e.message); dias = []; }
+
+    new Chart(document.getElementById("graficoChamadosPorDia"), {
+      type: "line",
+      data: {
+        labels: (dias || []).map(d => d.dia ? new Date(d.dia).toLocaleDateString("pt-BR") : '—'),
+        datasets: [{
+          label: "Chamados",
+          data: (dias || []).map(d => d.total ?? 0),
+          borderColor: "#2980b9",
+          backgroundColor: "rgba(41, 128, 185, 0.2)",
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    // --- Chamados Resolvidos por Dia ---
+    let resolvidos = [];
+    try { resolvidos = await fetchJson("http://localhost:8000/api/dashboard/resolvidosPorDia"); }
+    catch(e){ console.warn("resolvidosPorDia:", e.message); resolvidos = []; }
+
+    new Chart(document.getElementById("graficoResolvidosPorDia"), {
+      type: "line",
+      data: {
+        labels: (resolvidos || []).map(d => d.dia ? new Date(d.dia).toLocaleDateString("pt-BR") : '—'),
+        datasets: [{
+          label: "Resolvidos",
+          data: (resolvidos || []).map(d => d.total ?? 0),
+          borderColor: "#27ae60",
+          backgroundColor: "rgba(39, 174, 96, 0.2)",
+          fill: true,
+          tension: 0.3
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    // --- Chamados por Turno ---
+    let turnos = [];
+    try { turnos = await fetchJson("http://localhost:8000/api/dashboard/porTurno"); }
+    catch(e){ console.warn("porTurno:", e.message); turnos = []; }
+
+    new Chart(document.getElementById("graficoChamadosPorTurno"), {
+      type: "doughnut",
+      data: {
+        labels: (turnos || []).map(t => t.turno ?? '—'),
+        datasets: [{
+          label: "Chamados",
+          data: (turnos || []).map(t => t.total ?? 0),
+          backgroundColor: ["#f39c12", "#8e44ad", "#16a085"]
+        }]
+      },
+      options: { responsive: true }
+    });
+
+  } catch (err) {
+    console.error("Erro ao carregar gráficos (geral):", err);
+  }
+}
+
+// inicialização
+window.addEventListener('load', () => {
+  carregarDashboard();
+  carregarGraficos();
+});
+</script>
+
+
+</body>
+</html>

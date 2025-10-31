@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Chamado de Usuario | Conetec</title>
+  <link rel="stylesheet" href="css/nav.css">
+  <link rel="stylesheet" href="css/container.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" type="image/etec" href="images/logo.png">
+</head>
+
+
+<body>
+  <nav class="nav">
+  <div class="logo">
+<img src="images/pacote conetec/logo (2).png" />
+  </div>
+
+  <div class="user">
+       
+   <a href="index.html"> <button id="logoutBtn" class="logout-btn" title="Sair">
+      <i class="fas fa-sign-out-alt"></i>
+    </button></a>
+  </div>
+</nav>
+
+
+  
+<div class="container" style="display: flex; justify-content: center; align-items: center; ">
+<div class="form-wrapper" id="formAcessoWrapper">
+      <p class="title">Problemas com o seu Login?</p>
+      <br>
+         
+      <form id="formAcesso">
+        <input type="text" id="usuario_nome" placeholder="Nome completo" required>
+        <input type="email" id="email" placeholder="Email institucional" required>
+        <input type="text" id="telefone" placeholder="Telefone" required>
+        <input type="text" id="matricula" placeholder="Matrícula" required>
+        <textarea id="descricao_acesso" placeholder="Descreva o problema" rows="3" cols="40" required></textarea>
+        <button type="submit">Enviar Solicitação</button>
+      </form>
+    </div>
+
+<script>
+const formAcesso = document.getElementById('formAcesso');
+
+formAcesso.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const nome = document.getElementById('usuario_nome').value;
+  const email = document.getElementById('email').value;
+  const telefone = document.getElementById('telefone').value;
+  const matricula = document.getElementById('matricula').value;
+  const descricao = document.getElementById('descricao_acesso').value;
+
+  const body = {
+    categoria: "Usuario",
+    titulo: "Problemas de Usuário/Senha",
+    descricao: `Nome: ${nome}\nEmail: ${email}\nTelefone: ${telefone}\nMatrícula: ${matricula}\n${descricao}`,
+    urgencia: "Alta",
+    usuario_nome: nome
+  };
+
+  try {
+    // Se precisar de autenticação:
+    const token = localStorage.getItem('token');
+
+    const res = await fetch('http://localhost:8000/api/chamado', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+
+    alert('Solicitação enviada com sucesso!');
+    formAcesso.reset();
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao enviar solicitação.");
+  }
+});
+</script>
+
+
+</body>
+</html>

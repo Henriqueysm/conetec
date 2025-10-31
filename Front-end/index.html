@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tela de Login e Cadastro</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/toogle-password.js" defer></script>
+  <link rel="shortcut icon" type="image/etec" href="images/icon.png">
+
+</head>
+
+<body>
+  <div class="container" id="container">
+    <div class="panel left-panel">
+      <img src="images/pacote conetec/logo (10).png" alt="Etec Logo" class="logo login-logo">
+
+    </div>
+    <div class="panel right-panel">
+      <div class="form-container login active">
+        <form id="formLogin" class="form" method="POST">
+
+          <p class="title">Faça login na Conetec</p>
+          <br><br>
+          <label>
+            <input class="input" type="email" id="emailLogin" required>
+            <span>Email</span>
+          </label>
+
+
+          <label class="password-label">
+            <input class="input password-input" type="password" id="passwordLogin" required>
+            <span>Senha</span>
+            <span class="toggle-password">
+              <img src="images/eye-closed.png" alt="Mostrar senha">
+            </span>
+          </label>
+
+          <p class="forgot-password"><a href="usuarioProblema.html"> Problemas com Usuario ? </a> </p>
+
+          </p>
+          <!-- Link "Esqueci minha senha" -->
+          <p class="forgot-password"><a href="#" onclick="openPopup()">Esqueci minha senha</a></p>
+
+          <!-- temporario para criar cadastro 
+                                        <p class="forgot-password"><a href="html administrativo/adminUsuarios.html" > Criar cadastro</a></p>-->
+
+
+          <button type="submit" class="btn-avancar" id="loginBtn" value="Entrar" e.preventDefault();>Entrar</button><br>
+        </form>
+      </div>
+    </div>
+    <!-- Pop-up de Recuperação de Senha -->
+    <div class="popup-container" id="popup">
+      <div class="popup">
+        <span class="close-btn" onclick="closePopup()">&times;</span>
+
+        <!-- Passo 1: Digitar e-mail -->
+        <div id="step-email">
+          <h2>Recuperação de Senha</h2>
+          <p>Digite seu e-mail para receber o código de recuperação.</p>
+          <input type="email" id="emailInput" placeholder="Digite seu e-mail">
+          <button id="sendCodeBtn">Enviar Código</button>
+        </div>
+
+        <!-- Passo 2: Digitar código -->
+        <div id="step-code" style="display: none;">
+          <h2>Digite o Código</h2>
+          <p>Enviamos um código para seu e-mail. Digite abaixo:</p>
+
+          <div id="codeInputs">
+            <input type="text" maxlength="1" class="code-digit" />
+            <input type="text" maxlength="1" class="code-digit" />
+            <input type="text" maxlength="1" class="code-digit" />
+            <input type="text" maxlength="1" class="code-digit" />
+            <input type="text" maxlength="1" class="code-digit" />
+            <input type="text" maxlength="1" class="code-digit" />
+          </div>
+
+          <button id="verifyCodeBtn">Verificar Código</button>
+
+          <p class="info">
+            O código pode demorar alguns minutos. Aguarde <span id="timer">59</span>s.
+          </p>
+          <button id="resendCodeBtn" style="display: none;">Reenviar Código</button>
+
+          <p class="info">Verifique spam ou lixo eletrônico caso não receba o e-mail.</p>
+        </div>
+
+        <!-- Passo 3: Nova senha -->
+        <div id="step-reset" style="display: none;">
+          <h2>Nova Senha</h2>
+          <input type="password" id="newPasswordInput" placeholder="Nova senha">
+          <button id="resetPasswordBtn">Redefinir Senha</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const formLogin = document.getElementById("formLogin");
+
+      formLogin.addEventListener('submit', async (e) => {
+        e.preventDefault(); // impede envio padrão do form
+
+        const email = document.getElementById('emailLogin').value;
+        const senha = document.getElementById('passwordLogin').value;
+
+        try {
+          const response = await fetch('http://localhost:8000/api/usuario/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, senha }) // envia exatamente o que o backend espera
+          });
+
+          const data = await response.json();
+
+       if (!response.ok) {
+  return alert(data.error || 'Erro ao fazer login');
+}
+
+// Salvar dados no localStorage
+localStorage.setItem('token', data.token);
+localStorage.setItem('nome', data.usuario.nome);
+localStorage.setItem('tipo', data.usuario.tipo);
+localStorage.setItem('usuario_id', data.usuario.id);
+
+// 🔹 Adiciona este bloco:
+localStorage.setItem('usuarioLogado', JSON.stringify({
+  email: data.usuario.email,
+  nome: data.usuario.nome,
+  tipo: data.usuario.tipo,
+  id: data.usuario.id
+}));
+
+// Redirecionar baseado no tipo
+if (data.usuario.tipo === 'funcionario') {
+  window.location.href = 'html funcionario/dashboardFuncionario.html';
+} else if (data.usuario.tipo === 'tecnico') {
+  window.location.href = 'html tecnico/dashboardTecnico.html';
+} else if (data.usuario.tipo === 'admin') {
+  window.location.href = 'html administrativo/dashboardAdmin.html';
+} else {
+  alert('Tipo de usuário não reconhecido');
+}
+
+        } catch (err) {
+          console.error('Erro ao conectar com o servidor', err);
+          alert('Erro ao conectar com o servidor');
+        }
+      });
+
+      const popup = document.getElementById("popup");
+      const stepEmail = document.getElementById("step-email");
+      const stepCode = document.getElementById("step-code");
+      const stepReset = document.getElementById("step-reset");
+
+      const emailInput = document.getElementById("emailInput");
+      const codeInputs = document.querySelectorAll(".code-digit");
+      const newPasswordInput = document.getElementById("newPasswordInput");
+
+
+      let countdown;
+      const timerEl = document.getElementById("timer");
+      const resendBtn = document.getElementById("resendCodeBtn");
+
+      // Função para iniciar contagem regressiva
+      function startTimer() {
+        let time = 59;
+        timerEl.textContent = time;
+        resendBtn.style.display = "none"; // esconde botão
+        countdown = setInterval(() => {
+          time--;
+          timerEl.textContent = time;
+          if (time <= 0) {
+            clearInterval(countdown);
+            timerEl.textContent = "0";
+            resendBtn.style.display = "inline-block"; // mostra botão ao final
+          }
+        }, 1000);
+      }
+
+      // Evento do botão de reenviar
+      resendBtn.addEventListener("click", async () => {
+        const email = emailInput.value.trim();
+        if (!email) return alert("Digite seu e-mail");
+
+        try {
+          const res = await fetch("http://localhost:8000/api/usuario/forgot-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            alert("Código reenviado!");
+            startTimer(); // reinicia contagem
+            codeInputs.forEach(input => input.value = ""); // limpa inputs
+            codeInputs[0].focus();
+          } else {
+            alert(data.error);
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Erro ao conectar com o servidor");
+        }
+      });
+
+
+      // --- Abrir e fechar popup ---
+      function openPopup() { popup.style.display = "block"; }
+      function closePopup() {
+        popup.style.display = "none";
+        clearInterval(countdown);
+        timerEl.textContent = "59";
+        stepEmail.style.display = "block";
+        stepCode.style.display = "none";
+        stepReset.style.display = "none";
+        codeInputs.forEach(input => input.value = "");
+        emailInput.value = "";
+        newPasswordInput.value = "";
+      }
+
+
+
+      // --- Enviar código ---
+      document.getElementById("sendCodeBtn").addEventListener("click", async () => {
+        const email = emailInput.value.trim();
+        if (!email) return alert("Digite seu e-mail");
+
+        try {
+          const res = await fetch("http://localhost:8000/api/usuario/forgot-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            alert(data.message);
+            stepEmail.style.display = "none";
+            stepCode.style.display = "block";
+            startTimer();
+          } else {
+            alert(data.error);
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Erro ao conectar com o servidor");
+        }
+      });
+
+      // --- Inputs do código (uma caixa por dígito) ---
+      codeInputs.forEach((input, idx) => {
+        input.addEventListener("input", () => {
+          if (input.value.length === 1 && idx < codeInputs.length - 1) {
+            codeInputs[idx + 1].focus();
+          }
+        });
+      });
+
+      // --- Verificar código ---
+      document.getElementById("verifyCodeBtn").addEventListener("click", async () => {
+        const email = emailInput.value.trim();
+        const code = Array.from(codeInputs).map(input => input.value.trim()).join("");
+        if (!code) return alert("Digite o código");
+
+        try {
+          const res = await fetch("http://localhost:8000/api/usuario/verify-code", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, code })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            alert(data.message);
+            stepCode.style.display = "none";
+            stepReset.style.display = "block";
+          } else {
+            alert(data.error);
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Erro ao conectar com o servidor");
+        }
+      });
+
+      // --- Reset senha ---
+      document.getElementById("resetPasswordBtn").addEventListener("click", async () => {
+        const email = emailInput.value.trim();
+        const code = Array.from(codeInputs).map(input => input.value.trim()).join("");
+        const novaSenha = newPasswordInput.value.trim();
+        if (!novaSenha) return alert("Digite a nova senha");
+
+        try {
+          const res = await fetch("http://localhost:8000/api/usuario/reset-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, code, novaSenha })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            alert(data.message);
+            closePopup();
+          } else {
+            alert(data.error);
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Erro ao conectar com o servidor");
+        }
+      });
+    </script>
+
+</body>
+
+</html>

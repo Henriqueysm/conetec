@@ -1,0 +1,152 @@
+ .wrap {
+    max-width: 1400px;  /* limite da largura do conteúdo */
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  .panel {
+    margin-top: -25px;
+    width: 100%;
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+    overflow-x: auto; /* caso a tabela tenha muitas colunas */
+  }
+
+
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    font-size: 14px;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+  }
+
+  thead {
+    background: #2c3e50;
+    color: #fff;
+  }
+
+  th, td {
+    padding: 12px 15px;
+    text-align: left;
+    white-space: nowrap; /* evita quebra feia em colunas */
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s ease-in-out;
+  }
+
+  tbody tr:hover {
+    background: #f9f9f9;
+  }
+
+  tbody tr:last-child {
+    border-bottom: none;
+  }
+
+  /* Colunas destacadas */
+  td:nth-child(1) { font-weight: bold; } /* ID */
+  td:nth-child(5) { font-weight: 500; } /* Status */
+
+  /* Status coloridos */
+  .status-pendente {
+    color: #e67e22;
+    font-weight: bold;
+  }
+
+  .status-andamento {
+    color: #2980b9;
+    font-weight: bold;
+  }
+
+  .status-resolvido {
+    color: #27ae60;
+    font-weight: bold;
+  }
+
+#count-pendentes{
+    color: #e67e22;
+    font-weight: bold;
+  }
+
+  #count-andamento{
+     color: #2980b9;
+    font-weight: bold;
+  }
+
+  #count-resolvidos{
+    color: #27ae60;
+    font-weight: bold;
+  }
+
+  .salas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1.0rem;
+  margin-top: 1rem;
+}
+
+.sala-card {
+  border-radius: 12px;
+  padding: 12px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.sala-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+
+.sala-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+
+.sala-card h4 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #ffffff;
+}
+
+.sala-info {
+  color: #2c2c2c;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin: 0.3rem 0 0.8rem 0;
+}
+
+.status-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+.status-ok1 {
+  background-color: #4ab863 !important; /* verde */
+  color: white;
+}
+
+.status-pendente1 {
+  background-color: #e48901 !important; /* laranja */
+  color: white;
+}
+
+.status-andamento1 {
+  background-color: #4e91d8 !important; /* azul */
+  color: white;
+}

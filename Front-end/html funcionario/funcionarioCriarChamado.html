@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Criar Chamado | Conetec</title>
+  <link rel="stylesheet" href="../css/container.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" type="image/etec" href="../images/icon.png">
+</head>
+<style>
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 90vh;
+      margin-top: -10px;
+     }
+
+    .form-wrapper {
+      background-color: #a60000;
+      padding: 40px 40px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 620px;
+      color: #fff;
+      position: relative;
+    }
+
+</style>
+<body>
+  <div id="nav"></div>
+  <script src="../js/initNavFun.js"></script>
+  
+<div class="container">
+<div class="form-wrapper" id="formNormalWrapper">
+    <p class=title>Crie um chamado </p>
+      <br>
+      <form id="formChamado">
+            <select id="categoria" required>
+                <option value="">Selecione a categoria</option>
+                <option value="Rede">Rede</option>
+                <option value="Hardware">Hardware / Periféricos</option>
+                <option value="Software">Software</option>
+                <option value="Usuario">Usuario</option>
+                <!--option value="Infraestrutura">Infraestrutura</option-->
+                <!--<option value="Segurança">Segurança</option>-->
+                <!--<option value="Perifericos">Periféricos</option>-->
+                <!--option value="Impressora">Impressora</option-->
+                <option value="outros">Outros</option>
+            </select>
+
+            <select id="sala_id" required> <!--Sala opção-->
+                <option value="">Selecione o tipo</option>
+            </select>
+            
+            <select id="computador_id"> <!--computador opção-->
+                <option value="">Selecione o tipo</option>
+            </select>
+
+            <select id="aparelhos_id">
+              <option value="">Selecione o aparelho</option>
+            </select>
+
+            <input type="text" id="titulo" placeholder="Titulo" required />
+    <textarea placeholder="Em que podemos ajudar?" id="descricao" name="Descrição" rows="3" cols="40"></textarea>
+                                                                         
+          <select id="urgencia" required>
+            <option value="">Selecione a urgência</option>
+            <option value="Baixa">Baixa (48 Horas)</option>
+            <option value="Media">Média (24 Horas)</option>
+            <option value="Alta">Alta (8 Horas)</option>
+          </select>
+
+            <button type="submit">Cadastrar</button>
+        </form>
+        </div>
+
+    <!-- ======== FORM LOGIN ======== -->
+<div class="form-wrapper" id="formAcessoWrapper" style="display: none;">
+      <p class="title">Problemas com o seu Login?</p>
+      <br>
+      <select id="categoria" required>
+        <option value="">Selecione a categoria</option>
+        <option value="Rede">Rede</option>
+        <option value="Hardware">Hardware / Periféricos</option> 
+        <option value="Software">Software</option>
+        <option value="Usuario">Usuario</option>
+        <option value="outros">Outros</option>
+      </select>
+    
+      <form id="formAcesso">
+        <input type="text" id="usuario_nome" placeholder="Nome completo" required>
+        <input type="email" id="email" placeholder="Email institucional" required>
+        <input type="text" id="telefone" placeholder="Telefone" required>
+        <input type="text" id="matricula" placeholder="Matrícula" required>
+        <textarea id="descricao_acesso" placeholder="Descreva o problema" rows="3" cols="40" required></textarea>
+        <button type="submit">Enviar Solicitação</button>
+      </form>
+    </div>
+
+    <!-- ======== TABELA ========
+    <div class="table-wrapper">
+      <h3>Chamados Cadastrados</h3>
+      <table id="chamadoTable">
+        <thead>
+          <tr>
+            <th>Categoria</th>
+            <th>Sala</th>
+            <th>Computador</th>
+            <th>Aparelho</th>
+            <th>Título</th>
+            <th>Descrição</th>
+            <th>Urgência</th>
+            <th>Usuário</th>
+            <th>Criado em</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div> -->
+
+<script>
+const chamadoTable = document.querySelector('#chamadoTable tbody');
+const salaSelect = document.getElementById('sala_id');
+const computadorSelect = document.getElementById('computador_id');
+const aparelhosSelect = document.getElementById('aparelhos_id');
+const categoriaSelect = document.getElementById('categoria');
+const formChamado = document.getElementById('formChamado');
+const formNormalWrapper = document.getElementById('formNormalWrapper');
+const formAcesso = document.getElementById('formAcessoWrapper');
+const formAcessoWrapper = document.getElementById('formAcessoWrapper');
+const categoriaNormal = document.querySelector('#formNormalWrapper select#categoria');
+const categoriaAcesso = document.querySelector('#formAcessoWrapper select#categoria');
+
+// função segura para verificar existencia
+function el(id) { return document.getElementById(id); }
+/* ====== CARREGAR SALAS ====== */
+async function loadSalas() {
+  try {
+    const res = await fetch('http://localhost:8000/api/sala', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const salas = await res.json();
+    salaSelect.innerHTML = '<option value="">Selecione a sala</option>';
+    salas.forEach(s => {
+      salaSelect.innerHTML += `<option value="${s.id}">${s.nome}</option>`;
+    });
+  } catch (err) {
+    console.error("Erro ao carregar salas:", err);
+  }
+}
+
+/* ====== CARREGAR EQUIPAMENTOS ====== */
+async function loadEquipamentos(salaId) {
+  if (!salaId) return;
+  try {
+    // Computadores
+    const pcs = await (await fetch(`http://localhost:8000/api/computador/sala/${salaId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })).json();
+
+    computadorSelect.innerHTML = '<option value="">Selecione o computador</option>';
+    pcs.forEach(pc => {
+      computadorSelect.innerHTML += `<option value="${pc.id}"> Terminal ${pc.numero_mesa || ''} - ${pc.modelo || ''}</option>`;
+    });
+
+    // Aparelhos
+    const aps = await (await fetch(`http://localhost:8000/api/aparelhos/sala/${salaId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })).json();
+
+    aparelhosSelect.innerHTML = '<option value="">Selecione o aparelho</option>';
+    aps.forEach(a => {
+      aparelhosSelect.innerHTML += `<option value="${a.id}">${a.tipo} - ${a.modelo || ''}</option>`;
+    });
+  } catch (err) {
+    console.error("Erro ao carregar equipamentos:", err);
+  }
+}
+salaSelect.addEventListener('change', e => loadEquipamentos(e.target.value));
+
+/* ====== TOGGLE CAMPOS POR CATEGORIA ====== */
+function toggleFormPorCategoria() {
+  const categoria = categoriaNormal.value;
+
+  // Se for "Usuário/Senha", muda para o formulário de acesso
+  if (categoria === 'Usuario' || categoria === 'Usuário' || categoria === 'Usuario/Senha') {
+    formNormalWrapper.style.display = 'none';
+    formAcessoWrapper.style.display = 'block';
+    categoriaAcesso.value = 'Usuario';
+  } else {
+    formNormalWrapper.style.display = 'block';
+    formAcessoWrapper.style.display = 'none';
+  }
+
+  // Controle de exibição de campos no form normal
+  if (categoria === 'outros') {
+    if (aparelhosSelect) { aparelhosSelect.style.display = 'block'; aparelhosSelect.disabled = false; }
+    if (computadorSelect) { computadorSelect.style.display = 'none'; computadorSelect.disabled = true; }
+  } else {
+    if (computadorSelect) { computadorSelect.style.display = 'block'; computadorSelect.disabled = false; }
+    if (aparelhosSelect) { aparelhosSelect.style.display = 'none'; aparelhosSelect.disabled = true; }
+  }
+}
+
+// Quando muda a categoria no formulário principal
+categoriaNormal.addEventListener('change', toggleFormPorCategoria);
+
+// Quando muda a categoria dentro do formulário de acesso, volta para o form normal
+categoriaAcesso.addEventListener('change', () => {
+  if (categoriaAcesso.value !== 'Usuario' && categoriaAcesso.value !== 'Usuário' && categoriaAcesso.value !== 'Usuario/Senha') {
+    formAcessoWrapper.style.display = 'none';
+    formNormalWrapper.style.display = 'block';
+    categoriaNormal.value = categoriaAcesso.value;
+  }
+});
+
+/* ====== SUBMIT CHAMADO NORMAL ====== */
+formChamado.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const body = {
+    usuario_id: localStorage.getItem('usuario_id'),
+    usuario_nome: localStorage.getItem('usuario_nome'),
+    categoria: categoriaSelect.value,
+    sala_id: salaSelect.value || null,
+    computador_id: computadorSelect.value || null,
+    aparelhos_id: aparelhosSelect.value || null,
+    titulo: document.getElementById('titulo').value,
+    descricao: document.getElementById('descricao').value.trim(),
+    urgencia: document.getElementById('urgencia').value
+  };
+
+  if (!body.descricao) return alert("A descrição não pode estar vazia.");
+
+  try {
+    const res = await fetch('http://localhost:8000/api/chamado', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(await res.text());
+    alert('Chamado cadastrado com sucesso!');
+    formChamado.reset();
+   /* getAllChamado();*/
+  } catch (err) {
+    console.error('Erro ao criar chamado:', err);
+    alert('Erro ao criar chamado.');
+  }
+});
+
+/* ====== SUBMIT FORM DE LOGIN ====== */
+formAcesso.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const nome = document.getElementById('usuario_nome').value;
+  const email = document.getElementById('email').value;
+  const telefone = document.getElementById('telefone').value;
+  const matricula = document.getElementById('matricula').value;
+  const descricao = document.getElementById('descricao_acesso').value;
+
+  const body = {
+    categoria: "Usuario",
+    titulo: "Problemas de Usuário/Senha",
+    descricao: `Nome: ${nome}\nEmail: ${email}\nTelefone: ${telefone}\nMatrícula: ${matricula}\n${descricao}`,
+    urgencia: "Alta",
+    usuario_nome: nome
+  };
+
+  try {
+    const res = await fetch('http://localhost:8000/api/chamado', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(await res.text());
+    alert('Solicitação enviada com sucesso!');
+    formAcesso.reset();
+    formAcesso.style.display = 'none';
+    formNormalWrapper.style.display = 'block';
+    categoriaSelect.value = "";
+   /* getAllChamado();*/
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao enviar solicitação.");
+  }
+});
+
+/* ====== CARREGAR CHAMADOS ====== 
+async function getAllChamado() {
+  try {
+    const res = await fetch('http://localhost:8000/api/chamado', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const chamados = await res.json();
+    chamadoTable.innerHTML = "";
+    chamados.forEach(u => {
+      const d = new Date(u.data_abertura);
+      chamadoTable.innerHTML += `
+        <tr>
+          <td>${u.categoria}</td>
+          <td>${u.sala_nome || '-'}</td>
+          <td>${u.numero_mesa ? 'Terminal ' + u.numero_mesa : '-'}</td>
+          <td>${u.aparelhos_nome || '-'}</td>
+          <td>${u.titulo || '-'}</td>
+          <td>${u.descricao || '-'}</td>
+          <td class="${
+            u.urgencia === 'Baixa' ? 'urgencia-baixa' :
+            u.urgencia === 'Média' ? 'urgencia-media' :
+            u.urgencia === 'Alta' ? 'urgencia-alta' : ''
+          }">
+            ${u.urgencia || '-'}
+          </td>
+          <td>${u.usuario_nome || '-'}</td>
+          <td>${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR')}</td>
+        </tr>`;
+    });
+  } catch (err) {
+    console.error("Erro ao carregar chamados:", err);
+  }
+}*/
+
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadSalas();
+ /* await getAllChamado();*/
+});
+</script>
+
+</body>
+</html>

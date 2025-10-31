@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard | Conetec</title>
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" type="image/etec" href="../images/icon.png">
+</head>
+
+<body>
+  <div id="nav"></div>
+  <script src="../js/initNavFun.js"></script>
+ 
+  
+  <main class="wrap">
+    <section class="panel">
+      <h2> Dashboard </h2>
+      <div class="grid">
+      <!-- Cards de Resumo -->
+        <div class="card"><h3>Pendentes</h3><div class="value" id="count-pendentes">0</div></div>
+        <div class="card"><h3>Em andamento</h3><div class="value" id="count-andamento">0</div></div>
+        <div class="card"><h3>Resolvidos</h3><div class="value" id="count-resolvidos">0</div></div>
+        <div class="card"><h3>Tempo Médio Geral (horas)</h3><div class="value" id="tempo-medio-geral">0</div></div>
+      </div>
+      
+ <!-- Gráficos -->
+  <div class="grid2">
+    <div class="card2 chart-card">
+      <h3>Chamados por Status</h3>
+      <canvas id="graficoStatus"  height="200"></canvas>
+    </div>
+
+    <div class="card2 chart-card">
+      <h3>Chamados por Categoria</h3>
+      <canvas id="graficoCategoria" height="200"></canvas>
+    </div>
+ 
+    <div class="card2 chart-card">
+      <h3>Chamados por Urgência</h3>
+      <canvas id="graficoUrgencia" height="200"></canvas>
+    </div>
+  </div>
+
+<br><br><br>
+
+   <h3>Chamados Pendentes</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Categoria</th>
+        <th>Título</th>
+        <th>Usuário</th>
+        <th>Status</th>
+        <th>Data</th>
+      </tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
+
+<br><br><br>
+<h3>Mapa de Salas - ETEC Itapevi</h3>
+<div class="salas-grid" id="mapa-salas"></div>
+
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+ async function carregarDashboard() {
+      try {
+        const res = await fetch("http://localhost:8000/api/dashboard");
+        const data = await res.json();
+
+       // === Cards ===
+    document.getElementById("count-pendentes").innerText = data.cards.pendentes;
+    document.getElementById("count-andamento").innerText = data.cards.andamento;
+    document.getElementById("count-resolvidos").innerText = data.cards.resolvidos;
+    document.getElementById("tempo-medio-geral").innerText = data.tempoMedio;
+
+    // === Últimos chamados (tabela) ===
+    const tbody = document.getElementById("table-body");
+    tbody.innerHTML = "";
+
+
+        const chamadosAtivos = data.ultimos.filter(c =>
+          c.status === "Pendente" || c.status === "Em Andamento"
+        );
+
+        if (chamadosAtivos.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Nenhum chamado pendente ou em andamento</td></tr>`;
+        } else {
+          chamadosAtivos.forEach(c => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${c.id}</td>
+                <td>${c.categoria || "—"}</td>
+                <td>${c.titulo}</td>
+                <td>${c.usuario || "—"}</td>
+                <td class="${
+                  c.status === "Pendente" ? "status-pendente" :
+                  c.status === "Em Andamento" ? "status-andamento" :
+                  c.status === "Resolvido" ? "status-resolvido" : ""
+                }">${c.status}</td>
+                <td>${new Date(c.data_abertura).toLocaleDateString("pt-BR")}</td>
+              </tr>
+            `;
+          });
+        }
+
+      } catch (err) {
+        console.error("Erro ao carregar dashboard:", err);
+      }
+    }
+
+async function carregarGraficos() {
+  try {
+    const base = "http://localhost:8000/api/dashboard";
+
+    // === 1. Chamados por Status ===
+    const statusRes = await fetch("http://localhost:8000/api/dashboard/porStatus");
+    const statusData = await statusRes.json();
+
+// 🔹 Mapa fixo de cores por status
+const coresStatus = {
+  "Pendente": "#bda24b",
+  "Em Andamento": "#4e91d8",
+  "Resolvido": "#4ab863"
+};
+
+// 🔹 Gera as cores conforme o nome do status
+    const cores = statusData.map(s => coresStatus[s.status] || "#cccccc"); // cor padrão se não encontrar
+
+    new Chart(document.getElementById("graficoStatus"), {
+      type: "doughnut",
+      data: {
+        labels: statusData.map(s => s.status),
+        datasets: [{
+          data: statusData.map(s => s.total),
+          backgroundColor: cores
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    // === 2. Chamados por Categoria ===
+    const catRes = await fetch(`${base}/chamadosPorCategoria`);
+    const categorias = await catRes.json();
+    new Chart(document.getElementById("graficoCategoria"), {
+      type: "bar",
+      data: {
+        labels: categorias.map(c => c.categoria),
+        datasets: [{
+          label: "Chamados",
+          data: categorias.map(c => c.total),
+          backgroundColor: "#4e91d8"
+        }]
+      },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    // === 3. Chamados por Urgência ===
+    const urgRes = await fetch(`${base}/porPrioridade`);
+    const urgencias = await urgRes.json();
+    new Chart(document.getElementById("graficoUrgencia"), {
+      type: "pie",
+      data: {
+        labels: urgencias.map(u => u.prioridade),
+        datasets: [{
+          label: "Chamados",
+          data: urgencias.map(u => u.total),
+              backgroundColor: ["#0aaa2f", "#e48901", "#cc0116"]
+        }]
+      },
+      options: { responsive: true }
+    });
+
+    
+  } catch (err) {
+    console.error("Erro ao carregar gráficos:", err);
+  }
+}
+
+
+function getIconBySalaName(nomeSala) {
+  const nome = nomeSala.toLowerCase();
+
+  if (nome.includes("maker")) return "fa-laptop"; // 💻 Sala Maker
+  if (nome.includes("lab") || nome.includes("laboratório")) return "fa-desktop"; // 🖥️ Lab
+  if (nome.includes("admin") || nome.includes("administração")) return "fa-user-tie"; // 👔 Admin
+  if (nome.includes("coordenadores")) return "fa-building"; // 🏢 Coordenadores
+  if (nome.includes("professores")) return "fa-book"; // 📘 Professores
+
+  return "fa-computer"; // Ícone padrão
+}
+
+
+async function carregarMapaSalas() {
+  try {
+    const response = await fetch("http://localhost:8000/api/dashboard/resumoSalas");
+    const salas = await response.json();
+
+const container = document.querySelector("#mapa-salas");
+    container.innerHTML = "";
+
+    salas.forEach(sala => {
+      const pendentes = parseInt(sala.maquinas_pendentes || 0);
+      const andamento = parseInt(sala.maquinas_andamento || 0);
+
+      // Define a cor do status
+      let status = "✅ OK";
+      let cor = "green";
+      if (pendentes > 0) {
+        status = "🟥 Pendente";
+        cor = "red";
+      } else if (andamento > 0) {
+        status = "🟦 Em Andamento";
+        cor = "blue";
+      }
+
+      // Formata mesas
+      let mesas = "";
+      if (sala.mesas_com_problema) {
+        const lista = sala.mesas_com_problema.split(", ");
+        const primeiras = lista.slice(0, 6);
+        mesas = `Mesas com problema: ${primeiras.join(", ")}${
+          lista.length > 6 ? ` e mais ${lista.length - 6}` : ""
+        }`;
+      }
+
+      // Cria o card da sala
+      const card = document.createElement("div");
+      card.classList.add("card-sala");
+      card.style.borderLeft = `6px solid ${cor}`;
+      card.innerHTML = `
+        <h3>${sala.nome_sala}</h3>
+        <p>${sala.total_chamados_ativos || 0} chamado(s) ativo(s)</p>
+        <p>${pendentes} pendente(s) | ${andamento} em andamento</p>
+        ${mesas ? `<p>${mesas}</p>` : ""}
+        <strong style="color:${cor}">${status}</strong>
+      `;
+
+      container.appendChild(card);
+    });
+  } catch (err) {
+    console.error("Erro ao carregar mapa de salas:", err);
+  }
+}
+
+
+
+document.addEventListener("DOMContentLoaded", carregarMapaSalas);
+
+
+  carregarDashboard();
+  carregarGraficos();
+  carregarMapaSalas();
+
+</script>
+
+</body>
+</html>

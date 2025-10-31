@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestão de Usuários - Admin | Conetec</title>
+  <link rel="stylesheet" href="../css/container.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" type="image/etec" href="../images/icon.png">
+  <script src="../js/logout.js" defer></script>
+</head>
+
+<body>
+
+  <div id="nav"></div>
+  <script src="../js/initNavAd.js"></script>
+
+  <div class="container">
+    <div class="form-wrapper">
+      <p class="title">Crie um cadastro</p>
+      <br>
+
+      <form id="formCadastro">
+        <input type="text" id="name" placeholder="Nome" required />
+        <input type="email" id="email" placeholder="Email" required />
+
+        <label class="password-label">
+          <input class="password-input" type="password" id="senha" placeholder="Senha" required>
+          <span class="toggle-password" onclick="togglePassword()">
+            <img id="eyeIcon" src="../images/eye-open.png" alt="Mostrar senha">
+          </span>
+        </label>
+
+        <select id="tipo" required>
+          <option value="">Selecione o tipo</option>
+          <option value="funcionario">Funcionário</option>
+          <option value="tecnico">Técnico</option>
+          <option value="admin">Administrador</option>
+        </select>
+
+        <button type="submit">Cadastrar</button>
+      </form>
+    </div>
+
+    <!-- TABELA -->
+    <div class="table-wrapper">
+      <h3>Usuários Cadastrados</h3>
+      <table id="usuariosTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Tipo</th>
+            <th>Criado em</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- preenchido pelo JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // =======================
+    // MOSTRAR / OCULTAR SENHA
+    // =======================
+    function togglePassword() {
+      const input = document.getElementById("senha");
+      const eyeIcon = document.getElementById("eyeIcon");
+      if (input.type === "password") {
+        input.type = "text";
+        eyeIcon.src = "../images/eye-open.png";
+      } else {
+        input.type = "password";
+        eyeIcon.src = "../images/eye-closed.png";
+      }
+    }
+
+    // =======================
+    // CADASTRAR USUÁRIO
+    // =======================
+    const formCadastro = document.getElementById('formCadastro');
+
+    formCadastro.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = null;
+      const nome = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
+      const tipo = document.getElementById('tipo').value;
+
+      try {
+        await fetch('http://localhost:8000/api/usuario', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ id, nome, email, senha, tipo })
+        });
+
+        alert('Usuário cadastrado com sucesso!');
+        formCadastro.reset();
+        getAllUsuario();
+
+      } catch (err) {
+        console.error('Erro ao cadastrar:', err);
+        alert('Erro ao cadastrar usuário.');
+      }
+    });
+
+    // =======================
+    // LISTAR USUÁRIOS
+    // =======================
+    const usuariosTable = document.querySelector('#usuariosTable tbody');
+
+    async function getAllUsuario() {
+      try {
+        const response = await fetch("http://localhost:8000/api/usuario", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          console.error("Erro ao buscar usuários:", response.status);
+          return;
+        }
+
+        const data = await response.json();
+        const usuarios = Array.isArray(data) ? data : data.usuarios;
+
+        if (!Array.isArray(usuarios)) {
+          console.error("O backend não retornou uma lista de usuários:", data);
+          return;
+        }
+
+        usuariosTable.innerHTML = '';
+
+        usuarios.reverse().forEach(u => {
+          const formatDate = (data) => {
+            const dia = String(data.getDate()).padStart(2, '0');
+            const mes = String(data.getMonth() + 1).padStart(2, '0');
+            const ano = data.getFullYear();
+            const hora = String(data.getHours()).padStart(2, '0');
+            const minuto = String(data.getMinutes()).padStart(2, '0');
+            return `${dia}/${mes}/${ano} às ${hora}:${minuto}`;
+          };
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${u.id}</td>
+            <td><input value="${u.nome}" data-id="${u.id}" class="edit-nome"></td>
+            <td><input value="${u.email}" data-id="${u.id}" class="edit-email"></td>
+            <td>${u.tipo}</td>
+            <td><input value="${formatDate(new Date(u.criado_em))}" readonly></td>
+            <td>
+  <div class="two-btn">
+    <button class="edit-btn" onclick="updateUsuario(${u.id})">
+      <i class="fa-solid fa-pen"></i>
+    </button>
+    <button class="delete-btn" onclick="deleteUsuario(${u.id})">
+      <i class="fa-solid fa-trash"></i>
+    </button>
+  </div>
+</td>
+          `;
+          usuariosTable.appendChild(tr);
+        });
+
+      } catch (err) {
+        console.error("Erro ao carregar usuários:", err);
+      }
+    }
+
+    // =======================
+    // ATUALIZAR USUÁRIO
+    // =======================
+    async function updateUsuario(id) {
+      const nome = document.querySelector(`.edit-nome[data-id='${id}']`).value;
+      const email = document.querySelector(`.edit-email[data-id='${id}']`).value;
+
+      try {
+        const response = await fetch(`http://localhost:8000/api/usuario/${id}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ nome, email })
+        });
+
+        if (!response.ok) {
+          console.error("Erro ao atualizar usuário");
+          return;
+        }
+
+        alert("Usuário atualizado com sucesso!");
+        getAllUsuario();
+      } catch (err) {
+        console.error("Erro ao atualizar:", err);
+      }
+    }
+
+    // =======================
+    // EXCLUIR USUÁRIO
+    // =======================
+    async function deleteUsuario(id) {
+      try {
+        const response = await fetch(`http://localhost:8000/api/usuario/${id}`, {
+          method: "DELETE",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          console.error("Erro ao excluir usuário");
+          return;
+        }
+
+        alert("Usuário excluído com sucesso!");
+        getAllUsuario();
+      } catch (err) {
+        console.error("Erro ao excluir:", err);
+      }
+    }
+
+    // =======================
+    // INICIALIZA AO ABRIR
+    // =======================
+    getAllUsuario();
+  </script>
+
+</body>
+
+</html>

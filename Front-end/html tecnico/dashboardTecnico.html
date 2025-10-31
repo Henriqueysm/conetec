@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard | Conetec</title>
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" type="image/etec" href="../images/icon.png">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="nav"></div>
+  <script src="../js/initNavTec.js"></script>
+  
+<main class="wrap">
+<section class="panel" >
+  <h2>Dashboard - Tecnico </h2>
+
+
+
+  <div class="grid">
+    <!-- Cards de Resumo -->
+      <div class="card"><h3>Pendentes</h3><div class="value" id="count-pendentes">0</div></div>
+      <div class="card"><h3>Em andamento</h3><div class="value" id="count-andamento">0</div></div>
+      <div class="card"><h3>Resolvidos</h3><div class="value" id="count-resolvidos">0</div></div>
+  </div>
+
+  <div class="grid2">
+
+    <div class="card2 chart-card">
+      <h3>Chamados por Status</h3>
+      <canvas id="graficoPorStatus"></canvas>
+    </div>
+  
+    <div class="card2 chart-card">
+      <h3>Chamados por Prioridade</h3>
+      <canvas id="graficoPorPrioridade"></canvas>
+    </div>
+  
+    <div class="card2 chart-card">
+      <h3>Chamados por Sala</h3>
+      <canvas id="graficoChamadosPorSala"></canvas>
+    </div>
+
+  </div>
+
+  <br>
+
+   <h3>Chamados Pendentes</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Categoria</th>
+        <th>Título</th>
+        <th>Usuário</th>
+        <th>Status</th>
+        <th>Data</th>
+      </tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
+</section>
+</main>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    async function carregarDashboard() {
+      try {
+        const res = await fetch("http://localhost:8000/api/dashboard");
+        const data = await res.json();
+
+        // === Cards ===
+        document.getElementById("count-pendentes").innerText = data.cards.pendentes;
+        document.getElementById("count-andamento").innerText = data.cards.andamento;
+        document.getElementById("count-resolvidos").innerText = data.cards.resolvidos;
+
+        // === Tabela ===
+        const tbody = document.getElementById("table-body");
+        tbody.innerHTML = "";
+
+        const chamadosAtivos = data.ultimos.filter(c =>
+          c.status === "Pendente" || c.status === "Em Andamento"
+        );
+
+        if (chamadosAtivos.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Nenhum chamado pendente ou em andamento</td></tr>`;
+        } else {
+          chamadosAtivos.forEach(c => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${c.id}</td>
+                <td>${c.categoria || "—"}</td>
+                <td>${c.titulo}</td>
+                <td>${c.usuario || "—"}</td>
+                <td class="${
+                  c.status === "Pendente" ? "status-pendente" :
+                  c.status === "Em Andamento" ? "status-andamento" :
+                  c.status === "Resolvido" ? "status-resolvido" : ""
+                }">${c.status}</td>
+                <td>${new Date(c.data_abertura).toLocaleDateString("pt-BR")}</td>
+              </tr>
+            `;
+          });
+        }
+
+      } catch (err) {
+        console.error("Erro ao carregar dashboard:", err);
+      }
+    }
+
+    async function carregarGraficos() {
+      try {
+// Chamados por Status
+const resStatus = await fetch("http://localhost:8000/api/dashboard/porStatus");
+const status = await resStatus.json();
+
+// 🔹 Mapa fixo de cores por status
+const coresStatus = {
+  "Pendente": "#bda24b",
+  "Em Andamento": "#4e91d8",
+  "Resolvido": "#4ab863"
+};
+
+// 🔹 Gera as cores conforme o nome do status
+    const cores = status.map(s => coresStatus[s.status] || "#cccccc"); // cor padrão se não encontrar
+
+    new Chart(document.getElementById("graficoPorStatus"), {
+      type: "doughnut",
+      data: {
+        labels: status.map(s => s.status),
+        datasets: [{
+          data: status.map(s => s.total),
+          backgroundColor: cores
+        }]
+      },
+      options: { responsive: true }
+    });
+
+
+        // Chamados por Prioridade
+        const resPrioridade = await fetch("http://localhost:8000/api/dashboard/porPrioridade");
+        const prioridades = await resPrioridade.json();
+        new Chart(document.getElementById("graficoPorPrioridade"), {
+          type: "bar",
+          data: {
+            labels: prioridades.map(p => p.prioridade || "Não definida"),
+            datasets: [{
+              label: "Prioridades",
+              data: prioridades.map(p => p.total),
+              backgroundColor: ["#0aaa2f", "#e48901", "#cc0116"]
+            }]
+          },
+          options: { scales: { y: { beginAtZero: true } } }
+        });
+
+        // Chamados por Sala
+        const salaRes = await fetch("http://localhost:8000/api/dashboard/porSala");
+        const salas = await salaRes.json();
+        new Chart(document.getElementById("graficoChamadosPorSala"), {
+          type: "bar",
+          data: {
+            labels: salas.map(s => s.sala),
+            datasets: [{
+              label: "Chamados",
+              data: salas.map(s => s.total)
+            }]
+          }
+        });
+
+      } catch (err) {
+        console.error("Erro ao carregar gráficos:", err);
+      }
+    }
+
+    window.onload = async () => {
+      await carregarDashboard();
+      await carregarGraficos();
+    };
+  </script>
+
+</body>
+</html>

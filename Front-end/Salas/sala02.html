@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mapeamento de Salas | Conetec</title>
+  <link rel="stylesheet" href="../css/nav.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <link rel="stylesheet" href="Sala_esquerda.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" type="image/etec" href="../images/logo.png">
+  <script src="../js/logout.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+  <header>
+    <div class="topbar">
+      <div class="logo"><a href="dashboardFuncionario.html"><img src="../images/logo.png" /></a></div>
+      <div class="search-box">
+        <input type="text" placeholder="Buscar chamados..." />
+        <button aria-label="Buscar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#9e0f0f" viewBox="0 0 16 16">
+            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242 1.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+
+  <nav class="nav">
+    <a href="#" class="active">Detalhamento de chamados</a>
+    <a href="funcionarioHistorico.html">Histórico</a>
+    <a href="funcionarioSalas.html">Mapeamento de Salas</a>
+    <a href="funcionarioCriarChamado.html"><button class="cta"> Criar Chamado</button></a>
+
+    <div class="user">
+      <span id="userName"></span>
+      <button id="logoutBtn" class="logout-btn" title="Sair">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </nav>
+<div class="page">
+    <div class="card">
+      <div class="title">Sala 02 - Laboratório Informática</div>
+
+      <div class="map-wrapper">
+        <!-- mapa (esquerda) -->
+        <div class="room" aria-label="Mapa da sala">
+          <div class="room-grid" id="roomGrid">
+            <!-- top row -->
+            <div class="seat p2"  data-seat="2"  data-status="verde">2</div>
+            <div class="seat p3"  data-seat="3"  data-status="azul">3</div>
+            <div class="seat p4"  data-seat="4"  data-status="verde">4</div>
+            <div class="seat p5"  data-seat="5"  data-status="verde">5</div>
+            <div class="seat p6"  data-seat="6"  data-status="verde">6</div>
+            <div class="seat p7"  data-seat="7"  data-status="verde">7</div>
+            <div class="seat p8"  data-seat="8"  data-status="verde">8</div>
+            <div class="seat p9"  data-seat="9"  data-status="azul">9</div>
+
+            <div class="seat p1 selecionado" data-seat="1" data-status="verde">1</div>
+
+            <!-- middle 1 -->
+            <div class="seat p11" data-seat="11" data-status="verde">11</div>
+            <div class="seat p12" data-seat="12" data-status="verde">12</div>
+            <div class="seat p13" data-seat="13" data-status="amarelo">13</div>
+            <div class="seat p14" data-seat="14" data-status="verde">14</div>
+            <div class="seat p15" data-seat="15" data-status="verde">15</div>
+            <div class="seat p16" data-seat="16" data-status="verde">16</div>
+            <div class="seat p17" data-seat="17" data-status="verde">17</div>
+            <div class="seat p18" data-seat="18" data-status="verde">18</div>
+
+            <!-- middle 2 -->
+            <div class="seat p19" data-seat="19" data-status="verde">19</div>
+            <div class="seat p20" data-seat="20" data-status="verde">20</div>
+            <div class="seat p21" data-seat="21" data-status="verde">21</div>
+            <div class="seat p22" data-seat="22" data-status="verde">22</div>
+            <div class="seat p23" data-seat="23" data-status="amarelo">23</div>
+            <div class="seat p24" data-seat="24" data-status="verde">24</div>
+            <div class="seat p25" data-seat="25" data-status="verde">25</div>
+            <div class="seat p26" data-seat="26" data-status="verde">26</div>
+
+            <!-- bottom row -->
+            <div class="seat p27" data-seat="27" data-status="verde">27</div>
+            <div class="seat p28" data-seat="28" data-status="verde">28</div>
+            <div class="seat p29" data-seat="29" data-status="verde">29</div>
+            <div class="seat p30" data-seat="30" data-status="verde">30</div>
+            <div class="seat p31" data-seat="31" data-status="verde">31</div>
+            <div class="seat p32" data-seat="32" data-status="verde">32</div>
+            <div class="seat p33" data-seat="33" data-status="verde">33</div>
+            <div class="seat p34" data-seat="34" data-status="verde">34</div>
+          </div>
+
+          <!-- porta desenhada -->
+          <div class="door" aria-hidden="true"></div>
+        </div>
+
+        <!-- legenda / painel direito -->
+        <aside class="legend" aria-label="Legenda e ações">
+          <h3>Legenda</h3>
+          <div class="item"><span class="swatch sw-verde"></span> Resolvido ou OK</div>
+          <div class="item"><span class="swatch sw-amarelo"></span> Chamado Pendente</div>
+          <div class="item"><span class="swatch sw-azul"></span> Em Andamento</div>
+
+          <div style="height:8px"></div>
+          <div class="item"><strong>Selecionado</strong></div>
+          <div class="selected-info">
+            <div class="box" id="selectedBox">—</div>
+            <div style="font-size:14px;color:#333">Clique num quadrado para selecionar</div>
+          </div>
+
+          <div class="actions">
+            <button class="btn" id="criarBtn">Criar chamado</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
