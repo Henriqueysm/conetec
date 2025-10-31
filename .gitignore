@@ -17,6 +17,8 @@ Back-end/.env
 .env
 .env.local
 .env.*.local
+Back-end/seedUsuarios.js
+
 
 # Sistema Operacional / Editor
 .DS_Store
