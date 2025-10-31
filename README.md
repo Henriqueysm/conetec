@@ -102,8 +102,6 @@ O sistema centraliza a abertura e acompanhamento de chamados, com autenticação
 - ☁️ Hospedagem do backend e banco de dados na nuvem  
 - 🌐 Deploy completo (acesso remoto ao sistema)  
 - 📱 Ajustes de layout e responsividade  
-- 🧪 Testes finais e (opcional) vídeo de demonstração  
-
 
 ---
 
