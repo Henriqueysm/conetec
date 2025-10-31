@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./logo.png" alt="Logo Conetec" width="220"/>
+  <img src="./prints/logo.png" alt="Logo Conetec" width="220"/>
 </p>
 
 <h1 align="center">🧰 Conetec</h1>
@@ -103,6 +103,20 @@ O sistema centraliza a abertura e acompanhamento de chamados, com autenticação
 - 🌐 Deploy completo (acesso remoto ao sistema)  
 - 📱 Ajustes de layout e responsividade  
 - 🧪 Testes finais e (opcional) vídeo de demonstração  
+
+
+---
+
+
+## 📸 Demonstrações
+
+| Tela | Descrição |
+|------|------------|
+| ![Login](./prints/login.png) | Tela de login com autenticação segura |
+| ![Dashboard](./prints/dashboardAdmin.png) | Painel principal com gráficos e estatísticas do administrador |
+| ![Chamado](./prints/chamado.png) | Abertura e acompanhamento de chamados |
+| ![Histórico](./prints/historico.png) | Histórico de manutenção dos equipamentos |
+
 
 ---
 
