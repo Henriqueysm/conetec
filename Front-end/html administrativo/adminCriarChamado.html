@@ -151,7 +151,7 @@ async function loadEquipamentos(salaId) {
     });
 
     // Aparelhos
-    const aps = await (await fetch(`http://localhost:8000/api/aparelhos/sala/${salaId}`, {
+      const aps = await (await fetch(`http://localhost:8000/api/aparelhos/${salaId}`, {
       headers: { Authorization: `Bearer ${token}` }
     })).json();
 

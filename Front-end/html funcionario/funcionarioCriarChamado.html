@@ -19,10 +19,10 @@
 
     .form-wrapper {
       background-color: #a60000;
-      padding: 40px 40px;
+      padding: 40px 20px;
       border-radius: 10px;
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
-      width: 100%;
+      width: 30%;
       max-width: 620px;
       color: #fff;
       position: relative;
@@ -73,6 +73,7 @@
             <option value="Alta">Alta (8 Horas)</option>
           </select>
 
+
             <button type="submit">Cadastrar</button>
         </form>
         </div>
@@ -100,7 +101,7 @@
       </form>
     </div>
 
-    <!-- ======== TABELA ========
+    <!-- ======== TABELA ======== -->
     <div class="table-wrapper">
       <h3>Chamados Cadastrados</h3>
       <table id="chamadoTable">
@@ -115,12 +116,13 @@
             <th>Urgência</th>
             <th>Usuário</th>
             <th>Criado em</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
-  </div> -->
+  </div>
 
 <script>
 const chamadoTable = document.querySelector('#chamadoTable tbody');
@@ -164,11 +166,11 @@ async function loadEquipamentos(salaId) {
 
     computadorSelect.innerHTML = '<option value="">Selecione o computador</option>';
     pcs.forEach(pc => {
-      computadorSelect.innerHTML += `<option value="${pc.id}"> Terminal ${pc.numero_mesa || ''} - ${pc.modelo || ''}</option>`;
+      computadorSelect.innerHTML += `<option value="${pc.id}">Terminal ${pc.numero_mesa || ''} - ${pc.modelo || ''}</option>`;
     });
 
     // Aparelhos
-    const aps = await (await fetch(`http://localhost:8000/api/aparelhos/sala/${salaId}`, {
+    const aps = await (await fetch(`http://localhost:8000/api/aparelhos/${salaId}`, {
       headers: { Authorization: `Bearer ${token}` }
     })).json();
 
@@ -247,7 +249,7 @@ formChamado.addEventListener('submit', async (e) => {
     if (!res.ok) throw new Error(await res.text());
     alert('Chamado cadastrado com sucesso!');
     formChamado.reset();
-   /* getAllChamado();*/
+    getAllChamado();
   } catch (err) {
     console.error('Erro ao criar chamado:', err);
     alert('Erro ao criar chamado.');
@@ -286,15 +288,14 @@ formAcesso.addEventListener('submit', async (e) => {
     formAcesso.style.display = 'none';
     formNormalWrapper.style.display = 'block';
     categoriaSelect.value = "";
-   /* getAllChamado();*/
+    getAllChamado();
   } catch (err) {
     console.error(err);
     alert("Erro ao enviar solicitação.");
   }
 });
 
-/* ====== CARREGAR CHAMADOS ====== 
-async function getAllChamado() {
+/* ====== CARREGAR CHAMADOS ====== */async function getAllChamado() {
   try {
     const res = await fetch('http://localhost:8000/api/chamado', {
       headers: { Authorization: `Bearer ${token}` }
@@ -320,16 +321,41 @@ async function getAllChamado() {
           </td>
           <td>${u.usuario_nome || '-'}</td>
           <td>${d.toLocaleDateString('pt-BR')} ${d.toLocaleTimeString('pt-BR')}</td>
+          <td>
+            <button class="delete-btn" onclick="deleteUsuario(${u.id})">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
         </tr>`;
     });
   } catch (err) {
     console.error("Erro ao carregar chamados:", err);
   }
-}*/
+}
+
+// 👇 AGORA ELA FICA FORA DA OUTRA FUNÇÃO
+async function deleteUsuario(id) {
+  if (!confirm("Tem certeza que deseja excluir este chamado?")) return;
+
+  try {
+    const res = await fetch(`http://localhost:8000/api/chamado/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!res.ok) throw new Error(await res.text());
+    alert("Chamado excluído com sucesso!");
+    getAllChamado(); // Atualiza a tabela
+  } catch (err) {
+    console.error("Erro ao excluir chamado:", err);
+    alert("Erro ao excluir chamado.");
+  }
+}
+
 
 window.addEventListener('DOMContentLoaded', async () => {
   await loadSalas();
- /* await getAllChamado();*/
+  await getAllChamado();
 });
 </script>
 
