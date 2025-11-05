@@ -24,7 +24,7 @@ router.post('/alterarSenha', usuarioController.alterarSenha);
 router.get("/teste-email", async (req, res) => {
   try {
     await sendEmail({
-      to: "yuri.marques2@etec.sp.gov.br", // substitua pelo seu e-mail real
+      to: "yuri.marques2@etec.sp.gov.br", 
       subject: "Teste SendGrid",
       html: "<strong>Funcionou!</strong>"
     });

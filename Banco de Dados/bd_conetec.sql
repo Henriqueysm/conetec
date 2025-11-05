@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 04/11/2025 às 04:43
+-- Tempo de geração: 05/11/2025 às 02:04
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.0.30
 
@@ -144,9 +144,7 @@ INSERT INTO `chamado` (`id`, `usuario_id`, `data_abertura`, `categoria`, `titulo
 (43, 3, '2025-10-23 18:23:44', 'Hardware', 'Computador com ruído estranho	', 'Ruído alto vindo do cooler do computador.', NULL, 'Baixa', 'Pendente', 9, NULL, 1, NULL, NULL, NULL, NULL, '2025-10-23 18:23:44', 'Tina'),
 (44, 3, '2025-10-23 18:24:08', 'Software', 'Erro ao iniciar o Windows	', 'Mensagem de erro durante a inicialização do sistema.', NULL, 'Alta', 'Pendente', 25, NULL, 2, NULL, NULL, NULL, NULL, '2025-10-23 18:24:08', 'Tina'),
 (45, 3, '2025-10-23 18:24:34', 'Software', 'Sistema travando com frequência	', 'Sistema operacional apresenta lentidão e travamentos constantes.', NULL, 'Média', 'Pendente', 70, NULL, 5, NULL, NULL, NULL, NULL, '2025-10-23 18:24:34', 'Tina'),
-(46, 3, '2025-10-23 18:25:09', 'Hardware', 'Monitor com tela piscando', 'Monitor apresenta piscadas constantes após 10 minutos de uso.', NULL, 'Média', 'Pendente', 36, NULL, 2, NULL, NULL, NULL, NULL, '2025-10-23 18:25:09', 'Tina'),
-(47, 3, '2025-11-04 00:29:15', 'Rede', 'teste', 'teste', NULL, 'Baixa', 'Pendente', 78, NULL, 7, NULL, NULL, NULL, NULL, '2025-11-04 00:29:15', 'Tina'),
-(48, 3, '2025-11-04 00:37:44', 'Outros', 'teste', 'teste', NULL, 'Média', 'Pendente', NULL, 6, 3, NULL, NULL, NULL, NULL, '2025-11-04 00:37:44', 'Tina');
+(46, 3, '2025-10-23 18:25:09', 'Hardware', 'Monitor com tela piscando', 'Monitor apresenta piscadas constantes após 10 minutos de uso.', NULL, 'Média', 'Pendente', 36, NULL, 2, NULL, NULL, NULL, NULL, '2025-10-23 18:25:09', 'Tina');
 
 -- --------------------------------------------------------
 
@@ -378,11 +376,13 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`id`, `nome`, `email`, `senha`, `tipo`, `ativo`, `criado_em`, `atualizado_em`, `reset_code`, `reset_code_expires`) VALUES
-(1, 'Yuri', 'yuri@conetec.com', '$2b$10$/hkkdRu.Tvtlksym7387z.fl2il3ST075J2t/sQytXVPqaFdLR3Me', 'admin', 1, '2025-10-20 00:00:55', '2025-10-20 00:00:55', NULL, NULL),
+(1, 'Yuri', 'yuri@conetec.com', '$2b$10$/hkkdRu.Tvtlksym7387z.fl2il3ST075J2t/sQytXVPqaFdLR3Me', 'admin', 1, '2025-10-20 00:00:55', '2025-11-04 21:24:34', '361217', '2025-11-04 21:39:34'),
 (2, 'Daniel', 'daniel@conetec.com', '$2b$10$TLfSPilsiqUCJIy/ULwBkuwzEG6IGad.nzoGxUV86uF6xGCP32RpC', 'funcionario', 1, '2025-10-20 00:00:56', '2025-10-20 00:00:56', NULL, NULL),
-(3, 'Tina', 'tina@conetec.com', '$2b$10$SFqzeoC57Kmv1BDXIvcSDedML8eUZbzwgi4LR1ehxwvhPko8NHWEy', 'funcionario', 1, '2025-10-20 00:00:56', '2025-10-20 00:00:56', NULL, NULL),
+(3, 'Tina', 'tina@conetec.com', '$2b$10$jFOZAZmxMronXvK.D6QiYOnEt/CKz8kPmMPkdOMQtkg9HmX3jubY6', 'funcionario', 1, '2025-10-20 00:00:56', '2025-11-04 20:50:38', NULL, NULL),
 (4, 'Ana', 'ana@conetec.com', '$2b$10$melvEsjfQxV0LOlo.nUCmOzmEP5K1YmvWheYZC0QHTMAXZrOrnAx2', 'tecnico', 1, '2025-10-20 00:00:56', '2025-10-20 00:00:56', NULL, NULL),
-(5, 'Isa', 'isa@conetec.com', '$2b$10$GDgaMwkWivQPeONRZioY0.yQoxR1U0woCf3vIR6p8lEd77rs28W5q', 'tecnico', 1, '2025-10-20 00:00:56', '2025-10-20 00:00:56', NULL, NULL);
+(5, 'Isa', 'isa@conetec.com', '$2b$10$GDgaMwkWivQPeONRZioY0.yQoxR1U0woCf3vIR6p8lEd77rs28W5q', 'tecnico', 1, '2025-10-20 00:00:56', '2025-10-20 00:00:56', NULL, NULL),
+(6, 'Yuri', 'yuridelara@hotmail.com', '$2b$10$oP9vZqBrq5nYh3y/0iKxbeAs/uKVdXUc/LUTxRnxyZKRfLx7CU9MG', 'admin', 1, '2025-11-04 21:25:25', '2025-11-04 21:31:35', '748417', '2025-11-04 21:46:35'),
+(7, 'Yuri icloud', 'yurimarques1962@icloud.com', '$2b$10$/S9C.ZPkRf/Q653rxN0Kc.WhBX.b5uxijbRAhgLxdv5gLVvJ.QCLm', 'admin', 1, '2025-11-04 21:49:46', '2025-11-04 22:01:38', NULL, NULL);
 
 --
 -- Índices para tabelas despejadas
@@ -499,7 +499,7 @@ ALTER TABLE `categoria_chamado`
 -- AUTO_INCREMENT de tabela `chamado`
 --
 ALTER TABLE `chamado`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=49;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
 
 --
 -- AUTO_INCREMENT de tabela `computador`
@@ -535,7 +535,7 @@ ALTER TABLE `sla`
 -- AUTO_INCREMENT de tabela `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- Restrições para tabelas despejadas

@@ -210,68 +210,101 @@
         });
       });
 
-      // 2) Medidor de força (senhaNova)
-      const senhaNova = document.getElementById('senhaNova');
-      const strengthBar = document.getElementById('strengthBarFill');
-      const strengthText = document.getElementById('strengthText');
+// 2) Medidor de força (senhaNova)
+const senhaNova = document.getElementById('senhaNova');
+const strengthBar = document.getElementById('strengthBarFill');
+const strengthText = document.getElementById('strengthText');
+let nivelSenha = ''; // variável global pra validar no envio
 
-      senhaNova.addEventListener('input', () => {
-        const val = senhaNova.value;
-        let strength = 0;
-        if (val.match(/[A-Z]/)) strength++;
-        if (val.match(/[0-9]/)) strength++;
-        if (val.match(/[^a-zA-Z0-9]/)) strength++;
-        if (val.length >= 8) strength++;
+senhaNova.addEventListener('input', () => {
+  const val = senhaNova.value.trim();
+  const len = val.length;
+  const numeros = (val.match(/[0-9]/g) || []).length;
 
-        if (strength === 0) {
-          strengthBar.style.width = '0%';
-          strengthBar.style.background = '';
-          strengthText.textContent = '';
-        } else if (strength === 1) {
-          strengthBar.style.width = '25%'; strengthBar.style.background = 'red'; strengthText.textContent = 'Fraca';
-        } else if (strength === 2) {
-          strengthBar.style.width = '50%'; strengthBar.style.background = 'orange'; strengthText.textContent = 'Média';
-        } else if (strength === 3) {
-          strengthBar.style.width = '75%'; strengthBar.style.background = 'yellowgreen'; strengthText.textContent = 'Forte';
-        } else {
-          strengthBar.style.width = '100%'; strengthBar.style.background = 'green'; strengthText.textContent = 'Muito Forte';
-        }
-      });
+  let width = 0;
+  let color = '';
+  let texto = '';
 
-      // 3) Envio do formulário
-      document.getElementById('formAlterarSenha').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value.trim();
-        const senhaAntiga = document.getElementById('senhaAntiga').value.trim();
-        const senhaNovaVal = document.getElementById('senhaNova').value.trim();
-        const confirmar = document.getElementById('confirmarSenha').value.trim();
+  if (len === 0) {
+    texto = '';
+    width = 0;
+  } else if (len <= 4) {
+    texto = 'Fraca';
+    width = 25;
+    color = 'red';
+  } else if (len <= 6) {
+    texto = 'Média';
+    width = 50;
+    color = 'orange';
+  } else if (len > 8 && numeros >= 1 && len <= 10) {
+    texto = 'Forte';
+    width = 75;
+    color = 'yellowgreen';
+  } else if (len > 10 && numeros > 1) {
+    texto = 'Muito Forte';
+    width = 100;
+    color = 'green';
+  } else {
+    texto = 'Média';
+    width = 50;
+    color = 'orange';
+  }
 
-        if (!email || !senhaAntiga || !senhaNovaVal || !confirmar) {
-          return alert('Preencha todos os campos.');
-        }
-        if (senhaNovaVal !== confirmar) return alert('As senhas não coincidem.');
+  strengthBar.style.width = width + '%';
+  strengthBar.style.background = color;
+  strengthText.textContent = texto;
+  nivelSenha = texto; // salva o nível atual para usar no envio
+});
 
-        const validaForte = !!(senhaNovaVal.match(/[A-Z]/) && senhaNovaVal.match(/[0-9]/) && senhaNovaVal.match(/[^a-zA-Z0-9]/));
-        if (!validaForte) return alert('A nova senha deve conter letra maiúscula, número e caractere especial.');
 
-        try {
-          const res = await fetch('http://localhost:8000/api/usuario/alterarSenha', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, senhaAntiga, senhaNova: senhaNovaVal })
-          });
-          const data = await res.json();
-          if (res.ok) {
-            alert('Senha alterada com sucesso!');
-            window.location.href = '../index.html';
-          } else {
-            alert(data.error || data.message || 'Erro ao alterar senha.');
-          }
-        } catch (err) {
-          console.error(err);
-          alert('Erro ao conectar ao servidor.');
-        }
-      });
+// 3) Envio do formulário
+document.getElementById('formAlterarSenha').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  const senhaAntiga = document.getElementById('senhaAntiga').value.trim();
+  const senhaNovaVal = document.getElementById('senhaNova').value.trim();
+  const confirmar = document.getElementById('confirmarSenha').value.trim();
+
+  if (!email || !senhaAntiga || !senhaNovaVal || !confirmar) {
+    return alert('Preencha todos os campos.');
+  }
+
+  if (senhaNovaVal !== confirmar) {
+    return alert('As senhas não coincidem.');
+  }
+
+  // bloqueia senhas fracas ou médias
+  if (nivelSenha === 'Fraca' || nivelSenha === 'Média') {
+    return alert('A senha deve ser Forte ou Muito Forte para ser alterada.');
+  }
+
+  // garante que tenha letra e número
+  const temLetra = /[a-zA-Z]/.test(senhaNovaVal);
+  const temNumero = /[0-9]/.test(senhaNovaVal);
+  if (!temLetra || !temNumero) {
+    return alert('A nova senha deve conter pelo menos uma letra e um número.');
+  }
+
+  try {
+    const res = await fetch('http://localhost:8000/api/usuario/alterarSenha', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, senhaAntiga, senhaNova: senhaNovaVal })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      alert('Senha alterada com sucesso!');
+      window.location.href = '../index.html';
+    } else {
+      alert(data.error || data.message || 'Erro ao alterar senha.');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Erro ao conectar ao servidor.');
+  }
+});
+
 
        // Preenche automaticamente o e-mail do usuário logado
   const emailInput = document.getElementById('email');

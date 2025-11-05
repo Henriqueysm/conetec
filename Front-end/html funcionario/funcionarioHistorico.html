@@ -447,25 +447,23 @@ setInterval(() => {
     const tr = document.createElement('tr');
 
 let prazoHTML = '-';
-if (u.data_limite) {
-  const color = getPrazoColor(u.data_limite);
-const tempoRestante = formatarTempoRestante(u.data_limite, u.status);
+const prazoData = u.data_limite || u.prazo_estimado || calcularDataPrazoEstimado(u);
 
-if (u.status === "Resolvido") {
-  prazoHTML = tempoRestante; // já vem estilizado com ✅
-} else {
-  prazoHTML = `
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span class="indicador-prazo ${color}"></span>
-      <span>${tempoRestante}</span>
-    </div>
-  `;
-}
+if (prazoData) {
+  const color = getPrazoColor(prazoData);
+  const tempoRestante = formatarTempoRestante(prazoData, u.status);
 
-}
-
-
-tr.innerHTML = `
+  if (u.status === "Resolvido") {
+    prazoHTML = tempoRestante;
+  } else {
+    prazoHTML = `
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="indicador-prazo ${color}"></span>
+        <span>${tempoRestante}</span>
+      </div>
+    `;
+  }
+} tr.innerHTML = `
   <td>${u.id}</td>
   <td>${u.titulo || '-'}</td>
   <td>${u.categoria || '-'}</td>
@@ -474,9 +472,7 @@ tr.innerHTML = `
   <td>${u.data_abertura ? new Date(u.data_abertura).toLocaleDateString('pt-BR') : '-'}</td>
   <td>${prazoHTML}</td>
   <td><button class="view-details-btn">Ver Histórico</button></td>
-`;
-
-    tbodyChamados.appendChild(tr);
+`;tbodyChamados.appendChild(tr);
 
     // colorir linha conforme status (se quiser manter estilo)
     tr.classList.remove('status-pendente','status-andamento','status-resolvido');

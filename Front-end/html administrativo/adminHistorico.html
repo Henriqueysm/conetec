@@ -450,23 +450,23 @@ setInterval(() => {
     const tr = document.createElement('tr');
 
 let prazoHTML = '-';
-if (u.data_limite) {
-  const color = getPrazoColor(u.data_limite);
-const tempoRestante = formatarTempoRestante(u.data_limite, u.status);
+const prazoData = u.data_limite || u.prazo_estimado || calcularDataPrazoEstimado(u);
 
-if (u.status === "Resolvido") {
-  prazoHTML = tempoRestante; // já vem estilizado com ✅
-} else {
-  prazoHTML = `
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span class="indicador-prazo ${color}"></span>
-      <span>${tempoRestante}</span>
-    </div>
-  `;
+if (prazoData) {
+  const color = getPrazoColor(prazoData);
+  const tempoRestante = formatarTempoRestante(prazoData, u.status);
+
+  if (u.status === "Resolvido") {
+    prazoHTML = tempoRestante;
+  } else {
+    prazoHTML = `
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="indicador-prazo ${color}"></span>
+        <span>${tempoRestante}</span>
+      </div>
+    `;
+  }
 }
-
-}
-
 
 tr.innerHTML = `
   <td>${u.id}</td>
