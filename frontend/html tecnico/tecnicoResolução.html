@@ -203,7 +203,7 @@
     // --- Buscar chamados ---
     async function getAllChamado() {
       try {
-        const res = await fetch('https://conetec.vercel.app/api/chamado', {
+        const res = await fetch('http://localhost:8000/api/chamado', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const chamados = await res.json();
@@ -265,7 +265,7 @@ function aplicarCorUrgencia(inputEl, urgencia) {
       container.innerHTML = "<p>Carregando...</p>";
 
       try {
-        const res = await fetch(`https://conetec.vercel.app/api/historico/chamado/${chamadoId}`, {
+        const res = await fetch(`http://localhost:8000/api/historico/chamado/${chamadoId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await res.json();
@@ -435,7 +435,7 @@ async function abrirModal(chamado) {
       if (!id) return alert('ID do chamado ausente.');
 
       try {
-        const res = await fetch(`https://conetec.vercel.app/api/chamado/${id}`, {
+        const res = await fetch(`http://localhost:8000/api/chamado/${id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

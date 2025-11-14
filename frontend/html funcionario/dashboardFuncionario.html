@@ -9,7 +9,39 @@
   <link rel="shortcut icon" type="image/etec" href="../images/icon.png">
 </head>
 
+<style>
+  #global-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* Funfa transparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  opacity: 1;
+  transition: opacity 0.6s ease;
+}
+
+#global-loader.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#global-loader img {
+  width: 480px;
+}
+</style>
+
 <body>
+
+  <div id="global-loader">
+    <img src="../images/frame/loading1.png" id="loader-img">
+</div>
+
+
   <div id="nav"></div>
   <script src="../js/initNavFun.js"></script>
  
@@ -184,6 +216,8 @@ const coresStatus = {
   carregarGraficos();
 
 </script>
+
+<script src="../js/globalLoader.js"></script>
 
 </body>
 </html>

@@ -14,8 +14,6 @@
     overflow-x: auto; /* caso a tabela tenha muitas colunas */
   }
 
-
-
   table {
     width: 100%;
     border-collapse: collapse;

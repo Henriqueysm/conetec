@@ -9,26 +9,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="shortcut icon" type="image/etec" href="../images/icon.png">
 </head>
-<style>
-  .container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 90vh;
-    margin-top: -10px;
-  }
-
-  .form-wrapper {
-    background-color: #a60000;
-    padding: 40px 20px;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
-    width: 30%;
-    max-width: 620px;
-    color: #fff;
-    position: relative;
-  }
-</style>
 
 <body>
   <div id="nav"></div>
@@ -142,7 +122,7 @@
     /* ====== CARREGAR SALAS ====== */
     async function loadSalas() {
       try {
-        const res = await fetch('https://conetec.vercel.app/api/sala', {
+        const res = await fetch('http://localhost:8000/api/sala', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const salas = await res.json();
@@ -160,7 +140,7 @@
       if (!salaId) return;
       try {
         // Computadores
-        const pcs = await (await fetch(`https://conetec.vercel.app/api/computador/sala/${salaId}`, {
+        const pcs = await (await fetch(`http://localhost:8000/api/computador/sala/${salaId}`, {
           headers: { Authorization: `Bearer ${token}` }
         })).json();
 
@@ -170,7 +150,7 @@
         });
 
         // Aparelhos
-        const aps = await (await fetch(`https://conetec.vercel.app/api/aparelhos/${salaId}`, {
+        const aps = await (await fetch(`http://localhost:8000/api/aparelhos/${salaId}`, {
           headers: { Authorization: `Bearer ${token}` }
         })).json();
 
@@ -238,7 +218,7 @@
       if (!body.descricao) return alert("A descrição não pode estar vazia.");
 
       try {
-        const res = await fetch('https://conetec.vercel.app/api/chamado', {
+        const res = await fetch('http://localhost:8000/api/chamado', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -274,7 +254,7 @@
       };
 
       try {
-        const res = await fetch('https://conetec.vercel.app/api/chamado', {
+        const res = await fetch('http://localhost:8000/api/chamado', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -297,7 +277,7 @@
 
 /* ====== CARREGAR CHAMADOS ====== */async function getAllChamado() {
       try {
-        const res = await fetch('https://conetec.vercel.app/api/chamado', {
+        const res = await fetch('http://localhost:8000/api/chamado', {
           headers: { Authorization: `Bearer ${token}` }
         });
         const chamados = await res.json();
@@ -334,7 +314,7 @@
       if (!confirm("Tem certeza que deseja excluir este chamado?")) return;
 
       try {
-        const res = await fetch(`https://conetec.vercel.app/api/chamado/${id}`, {
+        const res = await fetch(`http://localhost:8000/api/chamado/${id}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }
         });
