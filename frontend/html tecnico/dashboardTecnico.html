@@ -143,20 +143,24 @@ const coresStatus = {
 
 
         // Chamados por Prioridade
-        const resPrioridade = await fetch("https://conetec.vercel.app/api/dashboard/porPrioridade");
-        const prioridades = await resPrioridade.json();
-        new Chart(document.getElementById("graficoPorPrioridade"), {
-          type: "bar",
-          data: {
-            labels: prioridades.map(p => p.prioridade || "Não definida"),
-            datasets: [{
-              label: "Prioridades",
-              data: prioridades.map(p => p.total),
-              backgroundColor: ["#0aaa2f", "#e48901", "#cc0116"]
-            }]
-          },
-          options: { scales: { y: { beginAtZero: true } } }
-        });
+const resPrioridade = await fetch("https://conetec.vercel.app/api/dashboard/porPrioridade");
+const prioridades = await resPrioridade.json();
+
+if (!Array.isArray(prioridades)) return;
+
+new Chart(document.getElementById("graficoPorPrioridade"), {
+  type: "bar",
+  data: {
+    labels: prioridades.map(p => p.prioridade || "Não definida"),
+    datasets: [{
+      label: "Prioridades",
+      data: prioridades.map(p => p.total),
+      backgroundColor: ["#0aaa2f", "#e48901", "#cc0116"]
+    }]
+  },
+  options: { scales: { y: { beginAtZero: true } } }
+});
+
 
         // Chamados por Sala
         const salaRes = await fetch("https://conetec.vercel.app/api/dashboard/porSala");

@@ -86,19 +86,25 @@ const getChamadosPorSala = async (req, res) => {
 const getChamadosPorPrioridade = async (req, res) => {
   try {
     const [rows] = await db.query(`
-      SELECT 
-        COALESCE(urgencia, 'Não definida') AS prioridade,
-        COUNT(*) AS total
-      FROM chamado
-      GROUP BY COALESCE(urgencia, 'Não definida')
-      ORDER BY FIELD(COALESCE(urgencia,'Não definida'), 'Alta','Média','Baixa','Não definida') DESC, total DESC
+      SELECT prioridade, total
+      FROM (
+        SELECT 
+          COALESCE(urgencia, 'Não definida') AS prioridade,
+          COUNT(*) AS total
+        FROM chamado
+        GROUP BY COALESCE(urgencia, 'Não definida')
+      ) AS t
+      ORDER BY total DESC, FIELD(prioridade, 'Alta','Média','Baixa','Não definida');
     `);
-    res.json(rows);
+
+    res.json(Array.isArray(rows) ? rows : []);
   } catch (err) {
     console.error("Erro em getChamadosPorPrioridade:", err);
-    res.status(500).json({ error: "Erro ao buscar chamados por prioridade" });
+    res.status(500).json([]);
   }
 };
+
+
 
 // === Chamados por Dia ===
 const getChamadosPorDia = async (req, res) => {
