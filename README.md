@@ -41,19 +41,30 @@ O sistema centraliza a abertura e acompanhamento de chamados, com autenticação
 
 ## 🚀 Tecnologias Utilizadas
 
-### 🧠 Backend
-- [Node.js](https://nodejs.org/)
-- [Express.js](https://expressjs.com/)
-- [MySQL](https://www.mysql.com/) (via [XAMPP](https://www.apachefriends.org/pt_br/index.html))
-- [dotenv](https://www.npmjs.com/package/dotenv)
-- [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken)
-- [cors](https://www.npmjs.com/package/cors)
-- [bcrypt](https://www.npmjs.com/package/bcrypt)
+### 🧠 Backend (Hospedado na Vercel)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
+![mysql2](https://img.shields.io/badge/mysql2-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![dotenv](https://img.shields.io/badge/dotenv-ECD53F?style=for-the-badge&logo=dotenv&logoColor=black)
+![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
+![CORS](https://img.shields.io/badge/CORS-FF6F00?style=for-the-badge)
+![bcrypt](https://img.shields.io/badge/bcrypt-0042C1?style=for-the-badge)
 
-### 🎨 Frontend
-- HTML5  
-- CSS3  
-- JavaScript (Fetch API)
+### 🎨 Frontend (Hospedado na Vercel)
+![HTML5](https://img.shields.io/badge/HTML5-E44D26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+
+### 🗄️ Banco de Dados
+![MySQL](https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Aiven](https://img.shields.io/badge/Aiven-FF4E62?style=for-the-badge&logo=aiven&logoColor=white)
+
+### 🌐 Infraestrutura
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+![Hostinger](https://img.shields.io/badge/Hostinger-673DE6?style=for-the-badge&logo=hostinger&logoColor=white)
+
+---
+
 
 ---
 
