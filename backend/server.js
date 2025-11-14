@@ -15,7 +15,18 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 
 // Middlewares
-app.use(cors({ origin: ['http://127.0.0.1:5500', 'http://localhost:5500', 'http://127.0.0.1:5501'] }));
+app.use(cors({
+  origin: [
+    'http://127.0.0.1:5500',
+    'http://localhost:5500',
+    'http://127.0.0.1:5501',
+    'https://conetec.online',
+    'https://www.conetec.online',
+    'https://conetec.vercel.app'
+  ],
+  methods: "GET,POST,PUT,DELETE",
+  allowedHeaders: "Content-Type, Authorization"
+}));
 app.use(express.json()); // já parseia JSON automaticamente
 
 // Teste básico da API
