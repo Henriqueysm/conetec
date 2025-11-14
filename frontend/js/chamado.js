@@ -10,7 +10,7 @@ formChamado.addEventListener('submit', async (e) => {
   const urgencia = document.getElementById('urgencia').value;
 
   try {
-    await fetch("http://localhost:8000/api/chamado", {
+    await fetch("https://conetec.vercel.app/api/chamado", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -45,7 +45,7 @@ async function getAllChamado() {
   const token = localStorage.getItem("token");
 
   try {
-    const response = await fetch("http://localhost:8000/api/chamado", {
+    const response = await fetch("https://conetec.vercel.app/api/chamado", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -100,7 +100,7 @@ async function updateChamado(id) {
   const descricao = document.querySelector(`.edit-descricao[data-id='${id}']`).value;
 
   try {
-    const response = await fetch(`http://localhost:8000/api/chamado/${id}`, {
+    const response = await fetch(`https://conetec.vercel.app/api/chamado/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -125,7 +125,7 @@ async function deleteChamado(id) {
   const token = localStorage.getItem("token");
 
   try {
-    const response = await fetch(`http://localhost:8000/api/chamado/${id}`, {
+    const response = await fetch(`https://conetec.vercel.app/api/chamado/${id}`, {
       method: "DELETE",
       headers: {
         "Authorization": `Bearer ${token}`

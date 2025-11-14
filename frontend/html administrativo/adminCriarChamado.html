@@ -123,7 +123,7 @@ function el(id) { return document.getElementById(id); }
 /* ====== CARREGAR SALAS ====== */
 async function loadSalas() {
   try {
-    const res = await fetch('http://localhost:8000/api/sala', {
+    const res = await fetch('https://conetec.vercel.app/api/sala', {
       headers: { Authorization: `Bearer ${token}` }
     });
     const salas = await res.json();
@@ -141,7 +141,7 @@ async function loadEquipamentos(salaId) {
   if (!salaId) return;
   try {
     // Computadores
-    const pcs = await (await fetch(`http://localhost:8000/api/computador/sala/${salaId}`, {
+    const pcs = await (await fetch(`https://conetec.vercel.app/api/computador/sala/${salaId}`, {
       headers: { Authorization: `Bearer ${token}` }
     })).json();
 
@@ -151,7 +151,7 @@ async function loadEquipamentos(salaId) {
     });
 
     // Aparelhos
-      const aps = await (await fetch(`http://localhost:8000/api/aparelhos/${salaId}`, {
+      const aps = await (await fetch(`https://conetec.vercel.app/api/aparelhos/${salaId}`, {
       headers: { Authorization: `Bearer ${token}` }
     })).json();
 
@@ -219,7 +219,7 @@ formChamado.addEventListener('submit', async (e) => {
   if (!body.descricao) return alert("A descrição não pode estar vazia.");
 
   try {
-    const res = await fetch('http://localhost:8000/api/chamado', {
+    const res = await fetch('https://conetec.vercel.app/api/chamado', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -255,7 +255,7 @@ formAcesso.addEventListener('submit', async (e) => {
   };
 
   try {
-    const res = await fetch('http://localhost:8000/api/chamado', {
+    const res = await fetch('https://conetec.vercel.app/api/chamado', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -278,7 +278,7 @@ formAcesso.addEventListener('submit', async (e) => {
 
 /* ====== CARREGAR CHAMADOS ====== */async function getAllChamado() {
   try {
-    const res = await fetch('http://localhost:8000/api/chamado', {
+    const res = await fetch('https://conetec.vercel.app/api/chamado', {
       headers: { Authorization: `Bearer ${token}` }
     });
     const chamados = await res.json();
@@ -319,7 +319,7 @@ async function deleteUsuario(id) {
   if (!confirm("Tem certeza que deseja excluir este chamado?")) return;
 
   try {
-    const res = await fetch(`http://localhost:8000/api/chamado/${id}`, {
+    const res = await fetch(`https://conetec.vercel.app/api/chamado/${id}`, {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` }
     });

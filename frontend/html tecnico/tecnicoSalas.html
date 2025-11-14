@@ -130,7 +130,7 @@ const detalhesContainer = document.getElementById("detalhes-sala");
 // 1️⃣ Carregar todas as salas
 async function carregarSalas() {
   try {
-    const response = await fetch("http://localhost:8000/api/sala/com-equipamentos");
+    const response = await fetch("https://conetec.vercel.app/api/sala/com-equipamentos");
     const salas = await response.json();
 
     salasContainer.innerHTML = "";
@@ -155,7 +155,7 @@ async function carregarSalas() {
 // 2️⃣ Carregar detalhes de uma sala específica
 async function verDetalhes(salaId) {
   try {
-    const response = await fetch(`http://localhost:8000/api/sala/${salaId}/detalhes`);
+    const response = await fetch(`https://conetec.vercel.app/api/sala/${salaId}/detalhes`);
     const sala = await response.json();
     console.log(sala);
 

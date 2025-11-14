@@ -71,7 +71,7 @@
 <script>
     async function carregarDashboard() {
       try {
-        const res = await fetch("http://localhost:8000/api/dashboard");
+        const res = await fetch("https://conetec.vercel.app/api/dashboard");
         const data = await res.json();
 
         // === Cards ===
@@ -116,7 +116,7 @@
     async function carregarGraficos() {
       try {
 // Chamados por Status
-const resStatus = await fetch("http://localhost:8000/api/dashboard/porStatus");
+const resStatus = await fetch("https://conetec.vercel.app/api/dashboard/porStatus");
 const status = await resStatus.json();
 
 // 🔹 Mapa fixo de cores por status
@@ -143,7 +143,7 @@ const coresStatus = {
 
 
         // Chamados por Prioridade
-        const resPrioridade = await fetch("http://localhost:8000/api/dashboard/porPrioridade");
+        const resPrioridade = await fetch("https://conetec.vercel.app/api/dashboard/porPrioridade");
         const prioridades = await resPrioridade.json();
         new Chart(document.getElementById("graficoPorPrioridade"), {
           type: "bar",
@@ -159,7 +159,7 @@ const coresStatus = {
         });
 
         // Chamados por Sala
-        const salaRes = await fetch("http://localhost:8000/api/dashboard/porSala");
+        const salaRes = await fetch("https://conetec.vercel.app/api/dashboard/porSala");
         const salas = await salaRes.json();
         new Chart(document.getElementById("graficoChamadosPorSala"), {
           type: "bar",

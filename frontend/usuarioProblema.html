@@ -66,7 +66,7 @@ formAcesso.addEventListener('submit', async (e) => {
     // Se precisar de autenticação:
     const token = localStorage.getItem('token');
 
-    const res = await fetch('http://localhost:8000/api/chamado', {
+    const res = await fetch('https://conetec.vercel.app/api/chamado', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

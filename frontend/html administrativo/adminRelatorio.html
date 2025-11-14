@@ -124,8 +124,8 @@
 
 <script>
 /* ====== Config ====== */
-const API_BASE = "http://localhost:8000/api/dashboard";
-const RELATORIO_ALL = "http://localhost:8000/api/dashboard/relatorio"; // deve retornar { totais, chamados }
+const API_BASE = "https://conetec.vercel.app/api/dashboard";
+const RELATORIO_ALL = "https://conetec.vercel.app/api/dashboard/relatorio"; // deve retornar { totais, chamados }
 
 /* ====== Util ====== */
 function el(id) { return document.getElementById(id); }
@@ -171,7 +171,7 @@ async function fetchJson(url) {
 async function carregarDashboard() {
   try {
 
-    const data = await fetchJson("http://localhost:8000/api/dashboard/");
+    const data = await fetchJson("https://conetec.vercel.app/api/dashboard/");
 
     // Segurança: defaults
     const cards = data.cards || { pendentes: 0, andamento: 0, resolvidos: 0 };
@@ -231,7 +231,7 @@ async function carregarGraficos() {
   try {
     // --- Chamados por Sala ---
     let salas = [];
-    try { salas = await fetchJson("http://localhost:8000/api/dashboard/porSala"); }
+    try { salas = await fetchJson("https://conetec.vercel.app/api/dashboard/porSala"); }
     catch(e){ console.warn("porSala:", e.message); salas = []; }
 
     new Chart(document.getElementById("graficoChamadosPorSala"), {
@@ -249,7 +249,7 @@ async function carregarGraficos() {
 
     // --- Chamados por Técnico ---
     let tecnicos = [];
-    try { tecnicos = await fetchJson("http://localhost:8000/api/dashboard/porTecnico"); }
+    try { tecnicos = await fetchJson("https://conetec.vercel.app/api/dashboard/porTecnico"); }
     catch(e){ console.warn("porTecnico:", e.message); tecnicos = []; }
 
     new Chart(document.getElementById("graficoChamadosPorTecnico"), {
@@ -267,7 +267,7 @@ async function carregarGraficos() {
 
     // --- Tempo Médio por Técnico ---
     let tempoMedio = [];
-    try { tempoMedio = await fetchJson("http://localhost:8000/api/dashboard/tempoMedioTecnico"); }
+    try { tempoMedio = await fetchJson("https://conetec.vercel.app/api/dashboard/tempoMedioTecnico"); }
     catch(e){ console.warn("tempoMedioTecnico:", e.message); tempoMedio = []; }
 
     new Chart(document.getElementById("graficoTempoMedio"), {
@@ -285,7 +285,7 @@ async function carregarGraficos() {
 
     // --- Chamados por Dia ---
     let dias = [];
-    try { dias = await fetchJson("http://localhost:8000/api/dashboard/porDia"); }
+    try { dias = await fetchJson("https://conetec.vercel.app/api/dashboard/porDia"); }
     catch(e){ console.warn("porDia:", e.message); dias = []; }
 
     new Chart(document.getElementById("graficoChamadosPorDia"), {
@@ -306,7 +306,7 @@ async function carregarGraficos() {
 
     // --- Chamados Resolvidos por Dia ---
     let resolvidos = [];
-    try { resolvidos = await fetchJson("http://localhost:8000/api/dashboard/resolvidosPorDia"); }
+    try { resolvidos = await fetchJson("https://conetec.vercel.app/api/dashboard/resolvidosPorDia"); }
     catch(e){ console.warn("resolvidosPorDia:", e.message); resolvidos = []; }
 
     new Chart(document.getElementById("graficoResolvidosPorDia"), {
@@ -327,7 +327,7 @@ async function carregarGraficos() {
 
     // --- Chamados por Turno ---
     let turnos = [];
-    try { turnos = await fetchJson("http://localhost:8000/api/dashboard/porTurno"); }
+    try { turnos = await fetchJson("https://conetec.vercel.app/api/dashboard/porTurno"); }
     catch(e){ console.warn("porTurno:", e.message); turnos = []; }
 
     new Chart(document.getElementById("graficoChamadosPorTurno"), {
@@ -345,7 +345,7 @@ async function carregarGraficos() {
 
     // --- Tempo Médio por Urgência ---
 let urgencias = [];
-try { urgencias = await fetchJson("http://localhost:8000/api/dashboard/tempoMedioUrgencia"); }
+try { urgencias = await fetchJson("https://conetec.vercel.app/api/dashboard/tempoMedioUrgencia"); }
 catch(e){ console.warn("tempoMedioUrgencia:", e.message); urgencias = []; }
 
 new Chart(document.getElementById("graficoTempoMedioUrgencia"), {
@@ -363,13 +363,13 @@ new Chart(document.getElementById("graficoTempoMedioUrgencia"), {
 
 // --- Percentual Dentro do Prazo ---
 let prazo = { percentual_dentro_prazo: 0 };
-try { prazo = await fetchJson("http://localhost:8000/api/dashboard/percentualDentroPrazo"); }
+try { prazo = await fetchJson("https://conetec.vercel.app/api/dashboard/percentualDentroPrazo"); }
 catch(e){ console.warn("percentualDentroPrazo:", e.message); }
 document.getElementById("percentualPrazo").innerText = `${prazo.percentual_dentro_prazo ?? 0}%`;
 
 // --- Ranking de Técnicos ---
 let ranking = [];
-try { ranking = await fetchJson("http://localhost:8000/api/dashboard/rankingTecnicos"); }
+try { ranking = await fetchJson("https://conetec.vercel.app/api/dashboard/rankingTecnicos"); }
 catch(e){ console.warn("rankingTecnicos:", e.message); ranking = []; }
 
 new Chart(document.getElementById("graficoRankingTecnicos"), {
@@ -387,7 +387,7 @@ new Chart(document.getElementById("graficoRankingTecnicos"), {
 
 // --- Abertos vs Resolvidos (mês atual) ---
 let abertosRes = [];
-try { abertosRes = await fetchJson("http://localhost:8000/api/dashboard/abertosVsResolvidosMes"); }
+try { abertosRes = await fetchJson("https://conetec.vercel.app/api/dashboard/abertosVsResolvidosMes"); }
 catch(e){ console.warn("abertosVsResolvidosMes:", e.message); abertosRes = []; }
 
 new Chart(document.getElementById("graficoAbertosResolvidos"), {
@@ -404,7 +404,7 @@ new Chart(document.getElementById("graficoAbertosResolvidos"), {
 
 // --- Evolução de Resolvidos ---
 let evolucao = [];
-try { evolucao = await fetchJson("http://localhost:8000/api/dashboard/evolucaoResolvidos"); }
+try { evolucao = await fetchJson("https://conetec.vercel.app/api/dashboard/evolucaoResolvidos"); }
 catch(e){ console.warn("evolucaoResolvidos:", e.message); evolucao = []; }
 
 new Chart(document.getElementById("graficoEvolucaoResolvidos"), {
@@ -425,7 +425,7 @@ new Chart(document.getElementById("graficoEvolucaoResolvidos"), {
 
 // --- Chamados por Equipamento ---
 let equipamentos = [];
-try { equipamentos = await fetchJson("http://localhost:8000/api/dashboard/porEquipamento"); }
+try { equipamentos = await fetchJson("https://conetec.vercel.app/api/dashboard/porEquipamento"); }
 catch(e){ console.warn("porEquipamento:", e.message); equipamentos = []; }
 
 new Chart(document.getElementById("graficoEquipamentos"), {

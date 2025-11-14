@@ -67,7 +67,7 @@
 <script>
  async function carregarDashboard() {
       try {
-        const res = await fetch("http://localhost:8000/api/dashboard");
+        const res = await fetch("https://conetec.vercel.app/api/dashboard");
         const data = await res.json();
 
        // === Cards ===
@@ -113,10 +113,10 @@
 
 async function carregarGraficos() {
   try {
-    const base = "http://localhost:8000/api/dashboard";
+    const base = "https://conetec.vercel.app/api/dashboard";
 
     // === 1. Chamados por Status ===
-    const statusRes = await fetch("http://localhost:8000/api/dashboard/porStatus");
+    const statusRes = await fetch("https://conetec.vercel.app/api/dashboard/porStatus");
     const statusData = await statusRes.json();
 
 // 🔹 Mapa fixo de cores por status

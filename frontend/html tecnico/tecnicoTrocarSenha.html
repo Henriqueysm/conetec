@@ -257,7 +257,7 @@
         if (!validaForte) return alert('A nova senha deve conter letra maiúscula, número e caractere especial.');
 
         try {
-          const res = await fetch('http://localhost:8000/api/usuario/alterarSenha', {
+          const res = await fetch('https://conetec.vercel.app/api/usuario/alterarSenha', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, senhaAntiga, senhaNova: senhaNovaVal })

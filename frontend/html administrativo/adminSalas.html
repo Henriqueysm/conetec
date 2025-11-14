@@ -61,7 +61,7 @@
       const descricao = document.getElementById('descricao').value;
 
       try {
-        await fetch('http://localhost:8000/api/sala', {
+        await fetch('https://conetec.vercel.app/api/sala', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -85,7 +85,7 @@
       const token = localStorage.getItem("token");
 
       try {
-        const response = await fetch("http://localhost:8000/api/sala", {
+        const response = await fetch("https://conetec.vercel.app/api/sala", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -147,7 +147,7 @@
       const descricao = document.querySelector(`.edit-descricao[data-id='${id}']`).value;
 
       try {
-        const response = await fetch(`http://localhost:8000/api/sala/${id}`, {
+        const response = await fetch(`https://conetec.vercel.app/api/sala/${id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -173,7 +173,7 @@
       const token = localStorage.getItem("token");
 
       try {
-        const response = await fetch(`http://localhost:8000/api/sala/${id}`, {
+        const response = await fetch(`https://conetec.vercel.app/api/sala/${id}`, {
           method: "DELETE",
           headers: {
             "Authorization": `Bearer ${token}`
