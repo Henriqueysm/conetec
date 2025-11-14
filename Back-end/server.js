@@ -38,14 +38,34 @@ const db = require("./src/controllers/db"); // verifique se é esse o caminho co
 // Rota de debug para listar todos os usuários
 app.get("/debug-usuario", async (req, res) => {
   try {
-    const [rows] = await db.query("SELECT id, nome, email FROM usuario");
-    console.log("📊 Usuários no banco:", rows);
+    const [rows] = await db.query("SHOW TABLES");
+    console.log("📊 Tabelas:", rows);
     res.json(rows);
   } catch (error) {
     console.error("❌ Erro no debug:", error);
-    res.status(500).json({ error: "Erro ao buscar usuários no banco" });
+    res.status(500).json({ error: error.message });
   }
 });
+
+
+// Teste de conexão com o banco Aiven
+app.get("/test-db", async (req, res) => {
+  try {
+    const [rows] = await db.query("SELECT 1 + 1 AS resultado");
+    res.json({
+      ok: true,
+      mensagem: "Conexão com o banco Aiven funcionando!",
+      resultado: rows[0].resultado
+    });
+  } catch (error) {
+    console.error("❌ Erro ao testar conexão com o banco:", error);
+    res.status(500).json({
+      ok: false,
+      erro: error.message
+    });
+  }
+});
+
 
 /* ======================================================
    🔹 IMPORTANTE: INICIALIZAÇÃO DO TRANSPORTER
